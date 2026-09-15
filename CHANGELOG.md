@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.preview.99 - 2026-09-14
+
+### Added
+- Background job completion notifications: background task exits re-enter the session at the model's next step boundary or turn start as a notifications block, removing the need for manual status polling or long wait windows
+- Subscription quota display in `/usage`: shows current session and weekly usage limit bars with reset times for Anthropic and ChatGPT subscriptions
+- Per-call model override for the Agent tool: subtasks can specify an individual `model` parameter, falling back to the agent definition or current session model
+
+### Changed
+- TUI theme overhaul: migrated all color call sites to a structured token table and refreshed Light mode to match the designer's palette (with matching syntax highlighting for fenced code blocks)
+- Model narration styling: intermediate model thoughts and narration preceding tool calls render in a muted tone, keeping the bright text tone for final answers
+- Inline Edit previews: completed edit results now use a 32-row inline budget that preserves complete diff hunks in file order, with remaining changes summarized and accessible in full via Ctrl+O
+- Unified version validation and upgrade checks in release automation in preparation for numbered SemVer releases
+
+### Fixed
+- Permission grants are now recorded only after tool approvals are accepted by the scheduler, preventing stale or denied approval responses from granting session permissions
+- Switching to fullscreen mode in the TUI now properly clears inline presenter caches and measures through the active presenter, avoiding duplicate cached entries and layout glitches
+- RGB theme colors are quantized to the 256-color ANSI palette on terminals without truecolor support
+
 ## v0.preview.98 - 2026-09-11
 
 ### Added
