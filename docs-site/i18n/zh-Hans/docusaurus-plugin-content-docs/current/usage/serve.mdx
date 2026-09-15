@@ -145,6 +145,8 @@ while let Some(event) = client.next_event().await {
 let client = connect("unix:/tmp/ante.sock".parse()?, ConnectOptions::default()).await?;
 ```
 
+完整客户端示例可参考 [`examples/mini-tui`](https://github.com/AntigmaLabs/ante/tree/main/examples/mini-tui)：一个单文件的交互式 Chat TUI，展示了如何流式接收 `MessageDelta`、通过 `y`/`n` 响应 `TurnPause` 审批，以及按 Esc 发送 `Interrupt`。在该目录下运行 `cargo run` 即可体验。
+
 该 crate 的 `claude` 模块与 Ante 协议无关：它用于将 Claude Code 作为子进程驱动。
 
 ## 服务模式与无头模式的区别 {#differences-from-headless-mode}

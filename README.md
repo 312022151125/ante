@@ -20,7 +20,7 @@
 
 **A ghost in your shell.** Ante is a self-contained coding agent that lives in your terminal and self-organizes. One ~15MB compressed download from [Antigma Labs](https://antigma.ai) that expands to a single Rust executable with zero runtime dependencies, built to get the most out of any model.
 
-It works like Claude Code or Codex, with none of their dependencies or model constraints. It can also be the optimized core for [building your own harness](#one-binary-many-agents) and high-performing assistants.
+It works like Claude Code or Codex, with none of their dependencies or model constraints. It can also be the optimized core for [building your own harness](examples/mini-tui) and high-performing assistants.
 
 ```sh
 curl -fsSL https://ante.run/install.sh | bash
