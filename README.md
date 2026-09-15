@@ -33,7 +33,7 @@ Ante makes this declarative: [one settings profile](#one-binary-many-agents) can
 
 ### 🥇 Continuously evaluated and evolved in public
 
-We evaluate Ante as a harness across different model families instead of coupling it to one hero model. Ante runs [Terminal-Bench 2.1](https://antigma.ai/eval) continuously under official leaderboard constraints: 89 tasks, 5 trials each. Each result pins the exact Ante build you can download and links the raw Harbor run for independent audit. Latest full run: **82.7%** with open-weight **DeepSeek V4 Flash 0731** (368/445 trials, Ante 0.preview.71, about $68 of inference). DeepSeek [reports](https://deepseek.ai/blog/deepseek-v4-flash-ga-agent-benchmarks) the same 82.7 for this model, measured with its unreleased DeepSeek Harness in minimal mode.
+We evaluate Ante as a harness across different model families instead of coupling it to one hero model. Ante runs [Terminal-Bench 2.1](https://antigma.ai/eval) continuously under official leaderboard constraints: 89 tasks, 5 trials each. Each result pins the exact Ante build you can download and links the raw Harbor run for independent audit. Latest full run: **83.9%** with open-weight **DeepSeek V4.1 Flash** (370/445 trials, Ante 0.preview.98, about $18 of inference).
 
 #### Same model, different harness
 
@@ -125,9 +125,9 @@ curl -fsSL https://ante.run/install.sh | ANTE_INSTALL_DIR=/usr/local/bin bash
 
 | Mode | Command | Use it for |
 |------|---------|------------|
-| [Interactive TUI](https://docs.antigma.ai/usage/tui) | `ante` | day-to-day work in the terminal |
+| [Interactive TUI](https://docs.antigma.ai/usage/tui) | `ante` | day-to-day work in the terminal (`--fullscreen` for alternate screen) |
 | [Headless](https://docs.antigma.ai/usage/headless) | `ante -p "..."` | one-shot tasks, scripts, CI |
-| [Server](https://docs.antigma.ai/usage/serve) | `ante serve` | editor plugins and integrations, over a JSONL protocol |
+| [Server](https://docs.antigma.ai/usage/serve) | `ante serve` | editor plugins and integrations, over stdio, socket (`--sock`), or WebSocket |
 | [Gateway](https://docs.antigma.ai/usage/gateway) | `ante gateway` | running Ante as a Slack or Discord bot |
 
 ### Headless examples
@@ -140,7 +140,7 @@ ante -p "find and fix the failing test in src/auth"
 git diff | ante -p "review this for security issues"
 
 # Use a different provider
-ante --provider openai --model gpt-5.5 -p "refactor the database module"
+ante --provider openai --model gpt-5.6 -p "refactor the database module"
 
 # Resume a saved session
 ante --resume ses_01ARZ3NDEKTSV4RRFFQ69G5FAV -p "now add tests"
@@ -159,14 +159,18 @@ ante update
 ante update --channel nightly
 
 # Roll back or pin to an exact release
-ante update --version v0.preview.98
+ante update --version v0.preview.99
 ```
 
 ## One binary, many agents
 
 Ante's behavior lives in a settings file, and `--profile <name>` swaps that file per run: system prompt, tool set, skills, memory. The same binary can be a full assistant in one terminal and a minimal agent in the next.
 
-The curated [`pi` profile](curated/pi.settings.json) is the extreme case. It strips Ante down to four tools (Read, Write, Edit, Bash) and one [short replacement system prompt](curated/pi.system-prompt.md); file search runs through `rg`, subagents through `ante -p "<task>"`, web access through `curl`. The whole agent fits in one JSON file you can read in a minute:
+For project-specific workflows, Ante also respects `.ante/settings.json` at your repository root, layering team settings (such as enabled MCP servers, allowed tools, and default models) right alongside user preferences.
+
+Curated profiles demonstrate how flexible this is:
+- [`pi`](curated/pi.settings.json): Strips Ante down to four tools (Read, Write, Edit, Bash) and a [short replacement system prompt](curated/pi.system-prompt.md); file search runs through `rg`, subagents through `ante -p "<task>"`, web access through `curl`.
+- [`plan`](curated/plan.settings.json): A read-only research and planning agent with file mutations disabled, designed to produce an implementation plan before you execute.
 
 ```sh
 cp curated/pi.settings.json ~/.ante/
@@ -175,7 +179,7 @@ ante --profile pi
 
 A profile replaces the whole settings file, so anything it omits falls back to Ante defaults, and explicit CLI flags still win. Ante also ships a built-in `bare` profile for stripped-down runs: no skills, MCP servers, session saving, or auto-memory. Share what you build in [`curated/`](curated).
 
-**[Named profiles →](https://docs.antigma.ai/configuration/preference#named-profiles)** · [Curated profiles →](curated)
+**[Named profiles →](https://docs.antigma.ai/configuration/preference#named-profiles)** · [Project settings →](https://docs.antigma.ai/configuration/preference#project-settings) · [Curated profiles →](curated)
 
 ## Supported Providers
 
@@ -219,12 +223,13 @@ Bring your own API key, subscription, or local model; no account required, not e
 We open sourced what really matters in the age of agentic coding, all under Apache 2.0:
 
 1. **Detailed documentation, the descriptive truth.** [`docs-site/`](docs-site) is the source for [docs.antigma.ai](https://docs.antigma.ai): a precise description of what the harness does and how to drive it.
-2. **The protocol, the algorithm of the core.** [`crates/protocol-shape`](crates/protocol-shape) defines the schema and wire messages spoken by `ante serve`; [`crates/ante-sdk`](crates/ante-sdk) is the Rust SDK and client for building against agent runtimes.
-3. **The eval pipeline, constraint and continuous improvement.** [`ante-harbor/`](ante-harbor) is the Harbor agent adapter behind our Terminal-Bench results: use it to reproduce any run at [antigma.ai/eval](https://antigma.ai/eval). [`CHANGELOG.md`](CHANGELOG.md) records the improvement, release by release.
+2. **The protocol and client SDKs.** [`crates/protocol-shape`](crates/protocol-shape) defines the wire messages and schema spoken by `ante serve`; [`crates/ante-sdk`](crates/ante-sdk) is the async Rust SDK for controlling Ante over stdio or Unix domain sockets; [`ante-acp`](ante-acp) provides Agent Client Protocol support.
+3. **Core primitives and execution engine.** As parts of the private core stabilize, they are open-sourced here: [`crates/exec`](crates/exec) provides bounded async process execution, and [`crates/llm`](crates/llm) supplies provider profiles and shared LLM primitives.
+4. **The eval pipeline, constraint and continuous improvement.** [`ante-harbor/`](ante-harbor) is the Harbor agent adapter behind our Terminal-Bench results: use it to reproduce any run at [antigma.ai/eval](https://antigma.ai/eval). [`CHANGELOG.md`](CHANGELOG.md) records the improvement, release by release.
 
-Alongside these, [`curated/`](curated) is a shared space for reusable pieces from the team and community, laid out to mirror `~/.ante/`: settings profiles like [`pi`](curated/pi.settings.json), and skills.
+Alongside these, [`curated/`](curated) is a shared space for reusable pieces from the team and community, laid out to mirror `~/.ante/`: settings profiles like [`pi`](curated/pi.settings.json) and [`plan`](curated/plan.settings.json), and skills.
 
-The core harness itself is developed in a private repository during the alpha and ships as a prebuilt binary via [releases](https://github.com/AntigmaLabs/ante/releases). Core libraries from it are included here progressively as they stabilize; [`crates/exec`](crates/exec), standalone process execution, is the first. Open-sourcing progress is tracked in [issue #21](https://github.com/AntigmaLabs/ante/issues/21).
+The core harness itself is developed in a private repository during the alpha and ships as a prebuilt binary via [releases](https://github.com/AntigmaLabs/ante/releases). Core libraries from it continue to be extracted here as they stabilize; progress is tracked in [issue #21](https://github.com/AntigmaLabs/ante/issues/21).
 
 The protocol surface maps to Ante's client-daemon architecture:
 
@@ -234,7 +239,7 @@ The protocol surface maps to Ante's client-daemon architecture:
 │                                                             │
 │   ┌───────────┐    ┌───────────┐    ┌────────────────────┐  │
 │   │    TUI    │    │ Headless  │    │    ante serve      │  │
-│   │  (ante)   │    │ (ante -p) │    │  (stdio / ws)      │  │
+│   │  (ante)   │    │ (ante -p) │    │   stdio/sock/ws    │  │
 │   └─────┬─────┘    └─────┬─────┘    └─────────┬──────────┘  │
 └─────────┼────────────────┼─────────────────────┼────────────┘
           │                │                     │
