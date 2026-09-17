@@ -1,6 +1,9 @@
 //! Open a connection to a host at an [`Endpoint`].
 
-use std::{collections::BTreeMap, path::PathBuf, process::Stdio};
+#[cfg(feature = "ws")]
+mod ws;
+
+use std::{collections::BTreeMap, fmt, path::PathBuf, process::Stdio};
 
 use ante_protocol_shape::{EventMsg, OpMsg};
 use thiserror::Error;
@@ -13,7 +16,7 @@ use tokio::{
 use crate::{Client, Endpoint, OpSender};
 
 /// How to reach or start the host. Every field is optional.
-#[derive(Debug, Clone, Default)]
+#[derive(Clone, Default)]
 pub struct ConnectOptions {
     /// The `ante` executable for [`Endpoint::Stdio`]. Defaults to `ante` on
     /// `PATH`.
@@ -26,6 +29,23 @@ pub struct ConnectOptions {
     /// Environment added to the spawned host's; the caller's environment is
     /// inherited otherwise.
     pub env: BTreeMap<String, String>,
+    /// The bearer token for [`Endpoint::Ws`], sent as `Authorization: Bearer
+    /// <token>` in the upgrade request. `ante serve --ws` refuses a peer
+    /// without it.
+    pub token: Option<String>,
+}
+
+impl fmt::Debug for ConnectOptions {
+    /// The token is a secret and is redacted.
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ConnectOptions")
+            .field("executable", &self.executable)
+            .field("args", &self.args)
+            .field("cwd", &self.cwd)
+            .field("env", &self.env)
+            .field("token", &self.token.as_ref().map(|_| "<redacted>"))
+            .finish()
+    }
 }
 
 #[derive(Debug, Error)]
@@ -48,6 +68,22 @@ pub enum ConnectError {
         #[source]
         source: std::io::Error,
     },
+    /// A plain `ws://` URL to a host other than loopback: the bearer token
+    /// would cross the network in clear. Use `wss://`.
+    #[error(
+        "refusing to dial `{0}` without TLS: plain `ws://` reaches loopback only, use `wss://`"
+    )]
+    Insecure(Endpoint),
+    /// The host answered the upgrade request with an HTTP error instead of
+    /// a connection — `401` for a missing or wrong bearer token.
+    #[error("`{endpoint}` refused the websocket upgrade with HTTP {status}")]
+    Refused { endpoint: Endpoint, status: u16 },
+    #[error("websocket handshake with `{endpoint}` failed: {source}")]
+    Handshake {
+        endpoint: Endpoint,
+        #[source]
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
 }
 
 /// Depth of the op bridge between the client and the host's byte stream.
@@ -62,8 +98,19 @@ pub async fn connect(endpoint: Endpoint, options: ConnectOptions) -> Result<Clie
         Endpoint::Stdio => connect_stdio(options),
         #[cfg(unix)]
         Endpoint::Unix(path) => connect_unix(path).await,
+        #[cfg(feature = "ws")]
+        Endpoint::Ws(url) => ws::connect(url, options.token).await,
+        #[cfg(not(all(unix, feature = "ws")))]
         other => Err(ConnectError::Unsupported(other)),
     }
+}
+
+/// A client and the far ends of its channels: the receiver a connector
+/// pumps ops out of, and the sender it pumps the host's events into.
+fn bridge() -> (Client, Receiver<OpMsg>, UnboundedSender<EventMsg>) {
+    let (op_tx, op_rx) = mpsc::channel(OP_CHANNEL);
+    let (evt_tx, evt_rx) = mpsc::unbounded_channel();
+    (Client::from_parts(OpSender::new(op_tx), evt_rx), op_rx, evt_tx)
 }
 
 /// Spawn `ante serve --stdio` and bridge its pipes onto a client's channel
@@ -96,8 +143,7 @@ fn connect_stdio(options: ConnectOptions) -> Result<Client, ConnectError> {
     let stdin = child.stdin.take().ok_or(ConnectError::MissingPipe)?;
     let stdout = child.stdout.take().ok_or(ConnectError::MissingPipe)?;
 
-    let (op_tx, op_rx) = mpsc::channel(OP_CHANNEL);
-    let (evt_tx, evt_rx) = mpsc::unbounded_channel();
+    let (client, op_rx, evt_tx) = bridge();
     tokio::spawn(pump_ops(op_rx, stdin));
     tokio::spawn(async move {
         pump_events(stdout, evt_tx).await;
@@ -106,8 +152,7 @@ fn connect_stdio(options: ConnectOptions) -> Result<Client, ConnectError> {
             Err(error) => tracing::warn!("waiting for the spawned host failed: {error}"),
         }
     });
-
-    Ok(Client::from_parts(OpSender::new(op_tx), evt_rx))
+    Ok(client)
 }
 
 /// Dial the socket file an `ante serve --sock` host listens on and bridge
@@ -121,12 +166,10 @@ async fn connect_unix(path: PathBuf) -> Result<Client, ConnectError> {
         .map_err(|source| ConnectError::Dial { endpoint: Endpoint::Unix(path), source })?;
     let (reader, writer) = stream.into_split();
 
-    let (op_tx, op_rx) = mpsc::channel(OP_CHANNEL);
-    let (evt_tx, evt_rx) = mpsc::unbounded_channel();
+    let (client, op_rx, evt_tx) = bridge();
     tokio::spawn(pump_ops(op_rx, writer));
     tokio::spawn(pump_events(reader, evt_tx));
-
-    Ok(Client::from_parts(OpSender::new(op_tx), evt_rx))
+    Ok(client)
 }
 
 /// Write each op to the host as one JSON line, until the client drops its
@@ -190,14 +233,28 @@ async fn pump_events<R: AsyncRead + Unpin>(reader: R, events: UnboundedSender<Ev
 mod tests {
     use super::*;
 
+    #[test]
+    fn connect_options_redact_the_token() {
+        let options = ConnectOptions { token: Some("s3cret".into()), ..Default::default() };
+        let printed = format!("{options:?}");
+        assert!(!printed.contains("s3cret"), "token leaked: {printed}");
+        assert!(printed.contains("<redacted>"), "got {printed}");
+    }
+
+    /// Without the `ws` feature a websocket endpoint is refused before
+    /// anything is dialed.
+    #[cfg(not(feature = "ws"))]
     #[tokio::test]
-    async fn ws_endpoints_report_unsupported_until_their_connector_lands() {
+    async fn ws_endpoints_are_unsupported_without_the_ws_feature() {
         let endpoint = Endpoint::Ws("ws://127.0.0.1:1".to_string());
         let error = connect(endpoint.clone(), ConnectOptions::default())
             .await
             .err()
-            .expect("ws endpoints are not connectable yet");
-        assert!(matches!(error, ConnectError::Unsupported(e) if e == endpoint));
+            .expect("no websocket connector in this build");
+        assert!(
+            matches!(error, ConnectError::Unsupported(ref e) if *e == endpoint),
+            "got {error:?}"
+        );
     }
 
     #[tokio::test]

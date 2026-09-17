@@ -7,9 +7,10 @@ use thiserror::Error;
 /// The address of an Ante host. It names a host, never a session: which
 /// session a connection drives is decided by the ops sent over it.
 ///
-/// String form: `stdio`, `unix:<path>`, `ws://<addr>`. Each variant carries
-/// exactly what its connector dials — a path, a whole URL. Credentials are
-/// not part of an endpoint; they travel in connect options.
+/// String form: `stdio`, `unix:<path>`, `ws://<addr>` or `wss://<addr>`.
+/// Each variant carries exactly what its connector dials — a path, a whole
+/// URL. Credentials are not part of an endpoint; they travel in connect
+/// options.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Endpoint {
     /// Spawn `ante serve --stdio` as a child and talk over its pipes. The
@@ -18,13 +19,19 @@ pub enum Endpoint {
     Stdio,
     /// A Unix domain socket file served by `ante serve --sock`.
     Unix(PathBuf),
-    /// A WebSocket URL (`ws://host:port`) served by `ante serve --ws`.
+    /// A WebSocket URL served by `ante serve --ws`: `ws://host:port` for a
+    /// loopback host, `wss://host:port` for one behind a TLS-terminating
+    /// proxy (the opt-in `wss` feature). The connector refuses plain `ws://`
+    /// to any other host, so the bearer token never crosses a network in
+    /// clear.
     Ws(String),
 }
 
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
 pub enum EndpointParseError {
-    #[error("unknown endpoint `{0}`; expected `stdio`, `unix:<path>`, or `ws://<addr>`")]
+    #[error(
+        "unknown endpoint `{0}`; expected `stdio`, `unix:<path>`, `ws://<addr>`, or `wss://<addr>`"
+    )]
     UnknownScheme(String),
     #[error("endpoint `{0}` is missing its address")]
     MissingAddress(String),
@@ -32,6 +39,7 @@ pub enum EndpointParseError {
 
 const UNIX_PREFIX: &str = "unix:";
 const WS_PREFIX: &str = "ws://";
+const WSS_PREFIX: &str = "wss://";
 
 impl FromStr for Endpoint {
     type Err = EndpointParseError;
@@ -47,7 +55,7 @@ impl FromStr for Endpoint {
                 Ok(Self::Unix(PathBuf::from(path)))
             };
         }
-        if let Some(addr) = s.strip_prefix(WS_PREFIX) {
+        if let Some(addr) = s.strip_prefix(WS_PREFIX).or_else(|| s.strip_prefix(WSS_PREFIX)) {
             return if addr.is_empty() {
                 Err(EndpointParseError::MissingAddress(s.to_string()))
             } else {
@@ -78,6 +86,7 @@ mod tests {
             ("stdio", Endpoint::Stdio),
             ("unix:/tmp/ante/serve.sock", Endpoint::Unix(PathBuf::from("/tmp/ante/serve.sock"))),
             ("ws://127.0.0.1:4242", Endpoint::Ws("ws://127.0.0.1:4242".to_string())),
+            ("wss://ante.example:443", Endpoint::Ws("wss://ante.example:443".to_string())),
         ] {
             let parsed: Endpoint = text.parse().expect("valid endpoint");
             assert_eq!(parsed, expected);
@@ -98,6 +107,10 @@ mod tests {
         assert_eq!(
             "ws://".parse::<Endpoint>(),
             Err(EndpointParseError::MissingAddress("ws://".to_string()))
+        );
+        assert_eq!(
+            "wss://".parse::<Endpoint>(),
+            Err(EndpointParseError::MissingAddress("wss://".to_string()))
         );
     }
 }

@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.2.0 - 2026-09-17
+
+First numbered release, closing the `v0.preview.N` series. From now on, patch releases within a minor series stay compatible; intentional breaking changes move to a new minor series with migration notes.
+
+### Added
+- AskUser tool: the model can ask one to four structured multiple-choice questions mid-turn. The TUI shows them in place of the composer, with option previews, free-text notes, and multi-select; Enter takes the recommended option, Esc skips so the model proceeds on its own judgment, and "Chat about this" returns to conversation. The gateway renders questions as numbered options. Unattended sessions never pause, and subagents do not get the tool
+- GPT-6 Astra in the OpenAI subscription provider, now its default model (272K context, image input); GPT-5.5, GPT-5.4, and GPT-5.4 Mini are removed from the subscription picker
+- `ante-sdk` connects to `ante serve --ws` over `ws://` (loopback hosts only) or `wss://` (opt-in `wss` feature), passing a bearer token
+
+### Changed
+- `ante serve --ws` requires a bearer token from `ANTE_SERVE_TOKEN` and refuses to start without one; clients must send `Authorization: Bearer <token>`, missing or wrong tokens are refused with `401`, and handshakes time out after 10 seconds
+- Disposable storage moved out of Ante home: WebFetch overflow goes to the OS cache directory (macOS `~/Library/Caches`, Linux `XDG_CACHE_HOME`, Windows `LOCALAPPDATA`), and intermediate downloads use the OS temp directory
+- `ante rage` writes the finished report to `--output` (default: the working directory) in both compressed and uncompressed formats, never overwrites existing output, and falls back to an `.uncompressed` directory if compression fails
+- Agent autocomplete in the TUI inserts quoted mentions (`@"name (agent)"`) instead of `@agent-name`
+
+### Fixed
+- Resumed sessions use the current permission settings instead of the saved mode, so a session saved in Yolo no longer overrides Strict settings. Older snapshots still load; their saved mode is ignored and dropped on the next save
+- The running-tool row wraps long shell commands over up to three rows with a `… (+N chars)` marker instead of cutting them off at the terminal edge
+
+### Wire
+- `TurnPauseReason::Question { tool_use_id, questions }` pauses a turn for AskUser; clients resolve it with `Op::QuestionResponse { turn_id, tool_use_id, reply }`, where `reply` is `Answered`, `Dismissed`, or `Discuss { message? }`. New payload types: `QuestionSpec`, `QuestionOption`, `QuestionAnswer`, `QuestionReply`
+
+### Crates
+- Public crates published as 0.2.0: ante-protocol-shape, ante-llm, ante-exec, ante-sdk
+
 ## v0.preview.99 - 2026-09-14
 
 ### Added

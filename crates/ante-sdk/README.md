@@ -16,19 +16,15 @@ An `Endpoint` names where a host is reachable, never a session:
 | --- | --- | --- |
 | `stdio` | spawns `ante serve --stdio` as its own child | the connection's |
 | `unix:<path>` | dials the socket file of an `ante serve --sock` host | someone else's |
-| `ws://<addr>` | dials a WebSocket server (not yet connectable) | someone else's |
+| `ws://<addr>`, `wss://<addr>` | dials an `ante serve --ws` host, presenting `ConnectOptions::token` as its bearer | someone else's |
+
+Plain `ws://` is dialed only to a loopback host; anywhere else must be
+`wss://`, so the bearer token never crosses a network in clear. The WebSocket
+connector is the `ws` feature, on by default; `wss://` and its TLS stack are
+the opt-in `wss` feature.
 
 A process that hosts sessions itself obtains the same `Client` type from its
 host directly; the in-process channel carries the same wire types the remote
 codecs serialize.
-
-[`examples/mini-tui`](../../examples/mini-tui) is a chat TUI in one file:
-it connects over `stdio`, streams the reply, and answers tool approvals
-with `y`/`n`. It needs a working `ante` on `PATH`; model and provider come
-from your settings.
-
-```sh
-cd examples/mini-tui && cargo run
-```
 
 The `claude` module is unrelated: it drives Claude Code as a child process.

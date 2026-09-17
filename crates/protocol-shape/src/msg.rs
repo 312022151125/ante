@@ -48,6 +48,16 @@ pub enum Op {
         turn_id: Id,
         responses: Vec<ToolDecision>,
     },
+    /// Resolve the active turn's pending question pause
+    /// ([`TurnPauseReason::Question`]). `turn_id` must be the paused turn and
+    /// `tool_use_id` must echo the pause's; stale or mismatched responses are
+    /// dropped. `reply` is what the user did: answered, skipped, or asked to
+    /// talk instead ([`QuestionReply`]).
+    QuestionResponse {
+        turn_id: Id,
+        tool_use_id: String,
+        reply: QuestionReply,
+    },
     SlashCommand {
         name: String,
         args: String,
@@ -226,7 +236,78 @@ pub enum Evt {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TurnPauseReason {
-    Approval { tools: Vec<ToolUse>, message: String },
+    Approval {
+        tools: Vec<ToolUse>,
+        message: String,
+    },
+    /// The model asked the user structured questions via the tool call
+    /// identified by `tool_use_id`. Unlike `Approval`, this pause may coexist
+    /// with sibling tools still running: `ToolStart`/`ToolEnd` events can
+    /// arrive while it is pending. Each question's first option is the
+    /// model's recommendation; clients resolve the pause with
+    /// [`Op::QuestionResponse`], and no option is ever chosen on the user's
+    /// behalf. Clients must clear question UI on `TurnResume` *and* on
+    /// `TurnEnd` — a cancelled turn may end without a resume.
+    Question {
+        tool_use_id: String,
+        questions: Vec<QuestionSpec>,
+    },
+}
+
+/// One question in a [`TurnPauseReason::Question`] pause.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct QuestionSpec {
+    /// Short label for this question, suitable for a chip or tab.
+    pub header: String,
+    /// The full question text.
+    pub question: String,
+    /// Whether the user may select more than one option.
+    #[serde(default)]
+    pub multi_select: bool,
+    /// The offered choices. A free-text "Other" affordance is the client's
+    /// to add; it is never part of this list.
+    pub options: Vec<QuestionOption>,
+}
+
+/// One selectable option of a [`QuestionSpec`].
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct QuestionOption {
+    pub label: String,
+    /// What choosing this option means.
+    pub description: String,
+    /// Optional preview content (e.g. a code snippet or mockup) clients may
+    /// render alongside the option.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preview: Option<String>,
+}
+
+/// One question's answer in [`Op::QuestionResponse`].
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct QuestionAnswer {
+    /// Selected option labels. Multi-select answers carry one entry per
+    /// selected option; empty when the user only typed free text.
+    pub selected: Vec<String>,
+    /// Free text the user typed: a note attached to the selection, or —
+    /// when `selected` is empty — the answer itself.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub note: Option<String>,
+}
+
+/// What the user did with a [`TurnPauseReason::Question`] pause.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum QuestionReply {
+    /// One entry per question, in question order. An entry with nothing
+    /// selected and no note leaves that question unanswered.
+    Answered(Vec<QuestionAnswer>),
+    /// The prompt was closed without answers.
+    Dismissed,
+    /// The user wants to talk before choosing. `message` carries their words
+    /// when the client collected any; absent, the model is expected to ask
+    /// what they want to clarify.
+    Discuss {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        message: Option<String>,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -1384,6 +1465,98 @@ mod tests {
         let op = serde_json::to_value(Op::ContextReport).expect("serialize op");
         assert_eq!(op, serde_json::json!("ContextReport"));
         assert!(matches!(serde_json::from_value::<Op>(op).unwrap(), Op::ContextReport));
+    }
+
+    #[test]
+    fn question_pause_serde_roundtrip() {
+        let turn_id = Id::new("op");
+        let pause = Evt::TurnPause {
+            turn_id,
+            reason: super::TurnPauseReason::Question {
+                tool_use_id: "toolu_1".to_string(),
+                questions: vec![super::QuestionSpec {
+                    header: "Auth method".to_string(),
+                    question: "Which auth method should we use?".to_string(),
+                    multi_select: false,
+                    options: vec![
+                        super::QuestionOption {
+                            label: "JWT (Recommended)".to_string(),
+                            description: "Stateless tokens".to_string(),
+                            preview: None,
+                        },
+                        super::QuestionOption {
+                            label: "Sessions".to_string(),
+                            description: "Server-side sessions".to_string(),
+                            preview: Some("fn login() {}".to_string()),
+                        },
+                    ],
+                }],
+            },
+        };
+
+        let json = serde_json::to_value(&pause).expect("serialize question pause");
+        // `multi_select` defaults and `preview: None` is skipped, not null.
+        let spec = &json["TurnPause"]["reason"]["Question"]["questions"][0];
+        assert!(spec["options"][0].get("preview").is_none());
+        assert_eq!(spec["options"][1]["preview"], "fn login() {}");
+
+        let decoded: Evt = serde_json::from_value(json).expect("deserialize question pause");
+        let Evt::TurnPause {
+            reason: super::TurnPauseReason::Question { tool_use_id, questions },
+            ..
+        } = decoded
+        else {
+            panic!("expected Question pause");
+        };
+        assert_eq!(tool_use_id, "toolu_1");
+        assert_eq!(questions.len(), 1);
+        assert!(!questions[0].multi_select);
+
+        // A spec without `multi_select` on the wire still decodes.
+        let sparse: super::QuestionSpec = serde_json::from_value(serde_json::json!({
+            "header": "Scope",
+            "question": "How broad?",
+            "options": [],
+        }))
+        .unwrap();
+        assert!(!sparse.multi_select);
+    }
+
+    #[test]
+    fn question_response_serde_roundtrip() {
+        let turn_id = Id::new("op");
+        let op = Op::QuestionResponse {
+            turn_id,
+            tool_use_id: "toolu_1".to_string(),
+            reply: super::QuestionReply::Answered(vec![super::QuestionAnswer {
+                selected: vec!["JWT".to_string(), "Sessions".to_string()],
+                note: None,
+            }]),
+        };
+        let json = serde_json::to_string(&op).expect("serialize QuestionResponse");
+        let decoded: Op = serde_json::from_str(&json).expect("deserialize QuestionResponse");
+        assert!(matches!(
+            decoded,
+            Op::QuestionResponse { tool_use_id, reply: super::QuestionReply::Answered(answers), .. }
+                if tool_use_id == "toolu_1" && answers[0].selected.len() == 2
+        ));
+
+        // A skip is the bare variant; a discussion request without words is
+        // an empty object, so `message` is never null on the wire.
+        for (reply, expected) in [
+            (super::QuestionReply::Dismissed, serde_json::json!("Dismissed")),
+            (super::QuestionReply::Discuss { message: None }, serde_json::json!({ "Discuss": {} })),
+            (
+                super::QuestionReply::Discuss { message: Some("later".to_string()) },
+                serde_json::json!({ "Discuss": { "message": "later" } }),
+            ),
+        ] {
+            let json = serde_json::to_value(&reply).expect("serialize reply");
+            assert_eq!(json, expected);
+            let decoded: super::QuestionReply =
+                serde_json::from_value(json).expect("deserialize reply");
+            assert_eq!(decoded, reply);
+        }
     }
 
     #[test]
