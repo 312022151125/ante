@@ -60,11 +60,13 @@ Frontmatter is read the same way as [skill frontmatter](/extend/skills#creating-
 When the main agent encounters a task that matches a sub-agent's description, it uses the `Agent` tool to spawn the sub-agent:
 
 1. The main agent evaluates available sub-agents and their descriptions
-2. It delegates the task via the `Agent` tool with a detailed prompt
+2. It delegates the task via the `Agent` tool with a detailed prompt, optionally specifying a per-call `model` override
 3. The sub-agent runs independently with its own context
 4. The result is returned to the main agent, which incorporates it into the conversation
 
 A sub-agent inherits the [skills](/extend/skills) equipped in the parent session, so skill-driven workflows keep working inside delegated tasks. Delegation is one level deep: a sub-agent never carries the `Agent` tool, so it cannot spawn further sub-agents.
+
+Subtasks can specify an individual `model` parameter on the `Agent` tool call. If omitted, the subtask falls back to the agent definition's `model` if configured, and then to the current session model.
 
 Each sub-agent runs in `auto` permission mode under an unattended policy. Safe calls proceed without prompting; a call that would require approval is denied immediately, and commands classified as destructive are never admitted. The child does not inherit the parent's permission mode or saved allow rules, because there is no visible prompt where a person could approve or persist a grant.
 

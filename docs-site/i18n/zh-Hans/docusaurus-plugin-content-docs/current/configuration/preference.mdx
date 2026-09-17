@@ -106,6 +106,10 @@ ANTE_PROFILE=review ante -p "审查本次改动"
 
 内置的 `bare` Profile 随 Ante 提供：首次运行 `--profile bare` 会生成 `~/.ante/bare.settings.json`，默认禁用欢迎引导与环境感知 UI 功能，并将 `auto_memory`、`skills` 和 `session_save` 设为 `false`（且不包含任何 MCP 服务）。此后其行为与其他 Profile 完全一致 —— 编辑文件或在 `/config` 中修改均可持久化。显式传入的命令行参数（如 `--enable-auto-memory`）仍可在运行时覆盖。
 
+官方与社区还在仓库的 `curated/` 目录中维护了开箱即用的 Profile：
+- `pi`：将 Ante 缩减至仅四个核心工具（`Read`、`Write`、`Edit`、`Bash`）并配合精炼提示词，将文件检索与自动化交给 Shell 工具执行。
+- `plan`：只读调研与方案设计智能体，禁用文件修改工具，专门在执行前生成完备的实施方案。
+
 ### 项目设置 {#project-settings}
 
 仓库可以携带自己的设置。会话启动或恢复时，Ante 会从会话工作目录逐级向上查找，由最近一个包含 `.ante/settings.json` 的上级目录提供一层**项目层**，叠加在用户设置之上：

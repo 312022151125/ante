@@ -106,6 +106,10 @@ The profile `work` reads and writes `~/.ante/work.settings.json`. Profiles are w
 
 The built-in `bare` profile ships with Ante: the first `--profile bare` run seeds `~/.ante/bare.settings.json` with onboarding and ambient UI features disabled, plus `auto_memory`, `skills`, and `session_save` set to `false` (and no MCP servers, since the profile defines none). After that it behaves like any other profile — edit the file or change settings in `/config` and they persist. Explicit run flags such as `--enable-auto-memory` still override it per run.
 
+The community and team also share ready-to-use profiles in the repository's `curated/` directory:
+- `pi`: Strips Ante down to four tools (`Read`, `Write`, `Edit`, `Bash`) with a concise system prompt, delegating search and automation to shell tools.
+- `plan`: A read-only research and planning agent with file mutations disabled, designed to produce an implementation plan before execution.
+
 ### Project settings
 
 A repository can carry its own settings. When a session starts or resumes, Ante walks up from the session's working directory, and the nearest ancestor containing `.ante/settings.json` supplies a **project layer** over your user settings:

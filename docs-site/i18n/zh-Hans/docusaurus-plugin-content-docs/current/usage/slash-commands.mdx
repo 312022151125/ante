@@ -25,7 +25,7 @@ description: "在交互式 TUI 终端中用于常用操作的内置命令"
 | `/term [name [args...]]` | 不带名称时，打开终端会话选择器；带名称时，附加或分离该 tmux 会话，当会话为新建时拉起同名命令及参数 —— 参见[终端会话](/usage/tui#terminal-sessions) |
 | `/update [skip \| cancel]` | 安排在退出时安装待更新的版本；`skip` 永久忽略该版本，`cancel` 取消已安排的更新 |
 | `/context` | 以彩色色块网格形式可视化当前上下文 Token 占用分布（按类别分解） |
-| `/usage` | 查看当前会话累计的 Token 消耗 —— 各模型 Token 计数、缓存命中率与轮次统计（参见[会话消耗统计](/usage/tui#session-usage)） |
+| `/usage` | 查看当前会话累计的消耗 —— 各模型 Token 计数、缓存命中率、轮次统计及订阅额度（参见[会话消耗统计](/usage/tui#session-usage)） |
 | `/welcome` | 显示欢迎/引导配置对话框 |
 | `/resume` | 恢复当前目录下此前保存的会话 |
 | `/rename [title]` | 为当前会话设置标题，显示在恢复选择器与终端标签页中；不带参数时清除标题（参见[会话标题](/usage/tui#session-title)） |
