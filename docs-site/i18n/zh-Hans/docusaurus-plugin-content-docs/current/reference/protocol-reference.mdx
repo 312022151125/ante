@@ -215,6 +215,33 @@ Ante 在客户端（Client）与守护进程（Daemon）之间采用强类型的
 | `AcceptForSession` | 在当前会话生命周期内始终允许（具备作用域泛化 —— 参见[会话临时授权](/configuration/permission#session-grants)） |
 | `AcceptAlways` | 在当前会话中允许，并将规则持久化写入 `settings.json`（“始终允许”） |
 
+### QuestionResponse {#questionresponse}
+
+响应并解决挂起的提问暂停（`TurnPauseReason::Question`）。由客户端在用户回答、跳过或发起讨论 `AskUser` 提出的结构化问题后发送。
+
+```json
+{
+  "op": {
+    "QuestionResponse": {
+      "turn_id": "step_01ARZ...",
+      "tool_use_id": "toolu_1",
+      "reply": {
+        "Answered": [
+          { "selected": ["JWT (Recommended)"], "note": null }
+        ]
+      }
+    }
+  },
+  "id": "op_..."
+}
+```
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `turn_id` | `Id` | 处于暂停状态的轮次 ID |
+| `tool_use_id` | `string` | 对应提问的工具调用 ID |
+| `reply` | `QuestionReply` | `Answered(QuestionAnswer[])`、`Dismissed` 或 `Discuss { message? }` |
+
 ### SlashCommand {#slashcommand}
 
 按名称调用 Skill 技能。
@@ -445,6 +472,7 @@ Ante 在客户端（Client）与守护进程（Daemon）之间采用强类型的
 | 变体 | 字段 | 说明 |
 |---|---|---|
 | `Approval` | `tools: ToolUse[]`, `message: string` | 正在等待工具调用审批 |
+| `Question` | `tool_use_id: string`, `questions: QuestionSpec[]` | 正在等待用户回答 `AskUser` 提出的结构化问题 |
 
 #### TurnResume {#turnresume}
 

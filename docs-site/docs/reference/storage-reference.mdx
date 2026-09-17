@@ -19,10 +19,10 @@ Ante persists configuration and state on the local filesystem. This page is a re
 | `~/.ante/.system/` | Bundled skills and sub-agents managed by the installed Ante version |
 | `~/.ante/sessions/<session-id>/` | Persisted sessions (for `/resume` and `--resume`) |
 | `~/.ante/projects/<project-id>/memory/` | Per-project auto-memory |
-| `~/.ante/cache/` | Oversized WebFetch response spill files; entries older than 48 hours are removed at startup |
 | `~/.ante/run/jobs/<proc-id>/` | Background Bash job handles: `status.json`, `stdout.txt`, and `stderr.txt` |
 | `~/.ante/run/serve.sock` | Default Unix socket for [`ante serve --sock`](/reference/cli-reference#ante-serve); a `serve.sock.lock` sibling holds the host's exclusive lock |
-| `~/.ante/tmp/` | Disposable staging files; entries older than 48 hours are removed at startup |
+| OS cache dir (`~/Library/Caches/ante`, `$XDG_CACHE_HOME/ante`) | Oversized WebFetch response spill files |
+| OS temp dir | Disposable staging files and intermediate downloads |
 | `~/.ante/logs/<YYYY-MM-DD>/` | Application and crash logs, partitioned by UTC date (`ante.<pid>.log` and `ante.<pid>.crash.log`) |
 | `~/.ante/logs/llama-server.log` | Local inference server log |
 | `~/.ante/models/` | Default directory for local GGUF models |

@@ -61,9 +61,13 @@ Spawn a sub-agent to handle a task autonomously. The agent picks which sub-agent
 
 Track progress on multi-step work with a task list.
 
+### AskUser
+
+Ask structured multiple-choice questions (one to four questions) mid-turn to clarify ambiguity or confirm decisions. The TUI renders questions in place of the composer with option previews, free-text notes, and multi-select support; Enter selects the recommended option, Esc skips so the model proceeds on its own judgment, and "Chat about this" returns to conversation. In channel gateways (Slack/Discord), questions render as numbered choices. Subagents do not receive `AskUser`, and unattended sessions never pause for questions.
+
 ### WebFetch
 
-Fetch a URL and return its contents directly for the active model to analyze, converting HTML to markdown. The input is URL-only; WebFetch does not run a second extraction model. Oversized responses spill to a local cache file the agent can read in slices instead of being truncated. Requests identify themselves as `ante/<version>`, and an unsuccessful HTTP response includes up to 2 KB of textual response-body detail when available. Requires approval.
+Fetch a URL and return its contents directly for the active model to analyze, converting HTML to markdown. The input is URL-only; WebFetch does not run a second extraction model. Oversized responses spill to a temporary cache file in the OS cache directory that the agent can read in slices instead of being truncated. Requests identify themselves as `ante/<version>`, and an unsuccessful HTTP response includes up to 2 KB of textual response-body detail when available. Requires approval.
 
 ### WebSearch
 
@@ -83,7 +87,7 @@ Tools provided by configured [MCP servers](/extend/mcp) are exposed to the agent
 
 ## Default tool set
 
-By default Ante enables `Read`, `Bash`, `Grep`, `Glob`, `TodoWrite`, `WebFetch`, `Edit`, `Write`, and `Agent`. `WebSearch` is added automatically when the session's provider supports native web search.
+By default Ante enables `Read`, `Bash`, `Grep`, `Glob`, `TodoWrite`, `AskUser`, `WebFetch`, `Edit`, `Write`, and `Agent`. `WebSearch` is added automatically when the session's provider supports native web search.
 
 `ViewImage` is opt-in.
 

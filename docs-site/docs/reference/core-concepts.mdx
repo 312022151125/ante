@@ -54,6 +54,7 @@ Operations (`Op`) are sent from the client to the daemon, wrapped in an `OpMsg` 
 | `ShellInput` | `String` | Run a daemon-side shell command without starting an agent turn |
 | `Steer` | `String` | Additional user guidance for the active turn |
 | `ApprovalResponse` | `turn_id`, `responses: [ToolDecision]` | Respond to tool approval requests; a `Deny` may carry a `message` back to the model |
+| `QuestionResponse` | `turn_id`, `tool_use_id`, `reply` | Resolve a structured question prompt asked by `AskUser` |
 | `SlashCommand` | `name`, `args` | Invoke a skill by name |
 | `RegisterLocalProvider` | `port`, `model?` | Register a running local inference server or router as the `local` provider |
 | `RestoreLocalProvider` | — | Restore the previously registered local provider |
@@ -75,7 +76,7 @@ Events (`Evt`) are sent from the daemon to the client, wrapped in an `EventMsg` 
 | `SessionUpdated` | `SessionInfo` | Session updated in place, repeating the session's equipped skills and subagents |
 | `SessionEnd` | `session_id`, `reason`, `usage` | Session terminated with final usage accounting |
 | `TurnStart` | `turn_id` | A new turn has begun |
-| `TurnPause` | `turn_id`, `reason` | Turn paused (e.g. waiting for tool approval) |
+| `TurnPause` | `turn_id`, `reason` | Turn paused (e.g. waiting for tool approval or answers to structured questions) |
 | `TurnResume` | `turn_id` | A paused turn resumed after approval or steering |
 | `TurnEnd` | `turn_id`, `status` | Turn completed, interrupted, or errored |
 | `AgentMessage` | `String` | Complete text response from agent |

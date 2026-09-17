@@ -40,17 +40,17 @@ ante serve --sock /tmp/ante.sock
 ### WebSocket 传输 {#websocket-transport}
 
 ```bash
-ante serve --ws 127.0.0.1:8080
+ANTE_SERVE_TOKEN="your-secret-token" ante serve --ws 127.0.0.1:8080
 ```
 
-`--ws` 参数在指定地址上启动 WebSocket 服务端。每个客户端在共享主机上拥有独立连接与会话。服务端会持续接受连接，直到宿主收到 `SIGINT` 或 `SIGTERM`；某个客户端的 `Shutdown` 只关闭该连接。
+`--ws` 参数在指定地址上启动 WebSocket 服务端。`ante serve --ws` 强制要求通过 `ANTE_SERVE_TOKEN` 环境变量传入 Bearer Token，未配置则拒绝启动。客户端必须在升级握手时提供 `Authorization: Bearer <token>` 请求头；缺失或错误的 Token 会被返回 HTTP 401 拒绝，握手设有 10 秒超时。每个客户端在共享主机上拥有独立连接与会话。服务端会持续接受连接，直到宿主收到 `SIGINT` 或 `SIGTERM`；某个客户端的 `Shutdown` 只关闭该连接。
 
 :::note
 传输方式参数互斥 —— 只能在 `--stdio`、`--sock`、`--ws` 中选择其一。
 :::
 
 :::caution
-监听地址必须为本地回环地址（`127.0.0.0/8` 或 `::1`）。Ante 拒绝绑定任何其他地址 —— 传入 `0.0.0.0:8080` 会在绑定前直接报错退出。由于该协议未设置身份认证，将其暴露到局域网或公网接口将赋予任何接入客户端在机器上执行任意工具的完全权限。若需从远程访问守护进程，请通过 SSH 隧道或带身份验证的反向代理转发。
+监听地址必须为本地回环地址（`127.0.0.0/8` 或 `::1`）。Ante 拒绝绑定任何其他地址 —— 传入 `0.0.0.0:8080` 会在绑定前直接报错退出。跨机器访问守护进程时，请通过 SSH 隧道或带身份验证与 TLS 加密（`wss://`）的反向代理转发。
 :::
 
 ## 工作原理 {#how-it-works}
@@ -134,11 +134,13 @@ while let Some(event) = client.next_event().await {
 |---|---|---|
 | `stdio` | 将 `ante serve --stdio` 作为自身子进程拉起 | 随连接结束 —— 丢弃 op 发送端即关闭子进程的 stdin |
 | `unix:<path>` | 连接某个 `ante serve --sock` 宿主的套接字文件 | 属于他人；宿主的生命周期长于该连接 |
-| `ws://<addr>` | 指向一个 WebSocket 宿主，但目前尚不可连接 | 属于他人 |
+| `ws://<addr>`, `wss://<addr>` | 连接 `ante serve --ws` 宿主，附带 `ConnectOptions::token` 作为 Bearer 认证 | 属于他人；宿主的生命周期长于该连接 |
+
+原生 `ws://` 仅允许连接本地回环地址；跨网络远程连接必须使用 `wss://`（在启用可选 `wss` 特性时提供），确保 Bearer Token 绝不明文传输。
 
 每种方式都产出同一个 `Client`；自身托管会话的进程也直接从其宿主获得同一类型 —— 进程内通道传递的正是远程编解码器所序列化的协议类型，因此客户端所能观察到的一切并无差别。
 
-`ConnectOptions` 全部字段可选，且仅作用于 `stdio` 路径上拉起的宿主：`executable`（默认为 `PATH` 上的 `ante`）、追加在 `serve --stdio` 之后的 `args`、`cwd`，以及额外的 `env`。连接成功仅代表传输层成功 —— 管道已打开，或套接字已连上。协议没有握手问候，因此第一个 op 的回复才是存活性检查。
+`ConnectOptions` 全部字段可选：`executable`（默认为 `PATH` 上的 `ante`）、追加在 `serve --stdio` 之后的 `args`、`cwd`、额外的 `env`，以及连接 `ws://`/`wss://` 时的 `token`（Bearer 认证 Token）。连接成功仅代表传输层成功 —— 管道已打开，或套接字已连上。协议没有握手问候，因此第一个 op 的回复才是存活性检查。
 
 ```rust
 // 连接他人正在运行的宿主

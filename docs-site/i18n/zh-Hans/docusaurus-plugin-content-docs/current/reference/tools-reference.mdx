@@ -62,9 +62,13 @@ Grep 会在页脚报告无法读取、解码、打开或过大的文件。与 Gl
 
 通过任务清单维护多步骤工作的执行进度。
 
+### AskUser {#askuser}
+
+在轮次进行中向用户提出 1 到 4 个结构化的多选题，以澄清意图或确认决策。TUI 会在输入框区域以交互组件形式渲染问题，支持选项预览、自由文本补充说明和多选；按 Enter 确认推荐选项，按 Esc 跳过以交由模型自行判断，点击“继续讨论”可返回正常对话。在 Slack / Discord 等网关中，问题会渲染为编号选项。子智能体不配备 `AskUser`，且无人值守会话不会因提问而挂起暂停。
+
 ### WebFetch {#webfetch}
 
-获取指定 URL 的内容并转换为 Markdown，交由当前会话模型直接分析。输入仅包含 URL；WebFetch 不会调用第二个提炼模型。超长响应会自动转存到本地缓存文件中供智能体分片读取，而非生硬截断。请求使用 `ante/<version>` 作为 User-Agent；HTTP 失败时会尽可能附带最多 2 KB 的文本响应体。需要审批。
+获取指定 URL 的内容并转换为 Markdown，交由当前会话模型直接分析。输入仅包含 URL；WebFetch 不会调用第二个提炼模型。超长响应会自动转存到系统缓存目录（如 macOS 上的 `~/Library/Caches`，Linux 上的 `$XDG_CACHE_HOME`）下的临时文件中供智能体分片读取，而非生硬截断。请求使用 `ante/<version>` 作为 User-Agent；HTTP 失败时会尽可能附带最多 2 KB 的文本响应体。需要审批。
 
 ### WebSearch {#websearch}
 
@@ -84,7 +88,7 @@ Grep 会在页脚报告无法读取、解码、打开或过大的文件。与 Gl
 
 ## 默认工具集 {#default-tool-set}
 
-Ante 默认启用 `Read`、`Bash`、`Grep`、`Glob`、`TodoWrite`、`WebFetch`、`Edit`、`Write` 和 `Agent`。当会话的提供商支持原生网络搜索时，会自动追加 `WebSearch`。
+Ante 默认启用 `Read`、`Bash`、`Grep`、`Glob`、`TodoWrite`、`AskUser`、`WebFetch`、`Edit`、`Write` 和 `Agent`。当会话的提供商支持原生网络搜索时，会自动追加 `WebSearch`。
 
 `ViewImage` 为可选启用工具。
 

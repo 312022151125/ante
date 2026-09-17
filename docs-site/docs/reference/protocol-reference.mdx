@@ -214,6 +214,33 @@ Respond to a tool approval request (sent after receiving a `TurnPause` event wit
 | `AcceptForSession` | Grant this call for the rest of the session (scoped — see [Session grants](/configuration/permission#session-grants)) |
 | `AcceptAlways` | Grant for the session and persist an allow rule to `settings.json` ("always allow") |
 
+### QuestionResponse
+
+Resolve a pending question pause (`TurnPauseReason::Question`). Sent after the user answers, skips, or requests a discussion on structured questions asked by `AskUser`.
+
+```json
+{
+  "op": {
+    "QuestionResponse": {
+      "turn_id": "step_01ARZ...",
+      "tool_use_id": "toolu_1",
+      "reply": {
+        "Answered": [
+          { "selected": ["JWT (Recommended)"], "note": null }
+        ]
+      }
+    }
+  },
+  "id": "op_..."
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `turn_id` | `Id` | The paused turn's identifier |
+| `tool_use_id` | `string` | Tool call identifier matching the pause |
+| `reply` | `QuestionReply` | `Answered(QuestionAnswer[])`, `Dismissed`, or `Discuss { message? }` |
+
 ### SlashCommand
 
 Invoke a skill by name.
@@ -444,6 +471,7 @@ Emitted when a turn is paused waiting for user input (e.g. tool approval).
 | Variant | Fields | Description |
 |---|---|---|
 | `Approval` | `tools: ToolUse[]`, `message: string` | Waiting for tool approval |
+| `Question` | `tool_use_id: string`, `questions: QuestionSpec[]` | Waiting for user response to structured questions from `AskUser` |
 
 #### TurnResume
 

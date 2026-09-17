@@ -20,10 +20,10 @@ Ante 将配置与状态持久化保存在本地文件系统中。本页面为 An
 | `~/.ante/.system/` | 由当前安装的 Ante 版本所管理的内置技能与子智能体 |
 | `~/.ante/sessions/<session-id>/` | 持久化会话数据（供 `/resume` 和 `--resume` 使用） |
 | `~/.ante/projects/<project-id>/memory/` | 各项目的专属自动记忆库 |
-| `~/.ante/cache/` | WebFetch 超大响应溢出暂存文件；启动时会自动清理超过 48 小时的条目 |
 | `~/.ante/run/jobs/<proc-id>/` | 后台 Bash 任务句柄：`status.json`、`stdout.txt` 和 `stderr.txt` |
 | `~/.ante/run/serve.sock` | [`ante serve --sock`](/reference/cli-reference#ante-serve) 的默认 Unix 套接字；同级的 `serve.sock.lock` 持有宿主的排他锁 |
-| `~/.ante/tmp/` | 一次性暂存文件；启动时会自动清理超过 48 小时的条目 |
+| 系统缓存目录（`~/Library/Caches/ante`、`$XDG_CACHE_HOME/ante`） | WebFetch 超大响应溢出暂存文件 |
+| 系统临时目录 | 一次性暂存文件与中间下载数据 |
 | `~/.ante/logs/<YYYY-MM-DD>/` | 应用程序与崩溃日志，按 UTC 日期归档（`ante.<pid>.log` 与 `ante.<pid>.crash.log`） |
 | `~/.ante/logs/llama-server.log` | 本地推理服务器日志 |
 | `~/.ante/models/` | 本地 GGUF 模型的默认存放目录 |

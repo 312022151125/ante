@@ -39,17 +39,17 @@ One host owns a socket path at a time. Ownership is an exclusive lock on a `.loc
 ### WebSocket transport
 
 ```bash
-ante serve --ws 127.0.0.1:8080
+ANTE_SERVE_TOKEN="your-secret-token" ante serve --ws 127.0.0.1:8080
 ```
 
-The `--ws` flag starts a WebSocket server on the given address. Each client gets its own connection and session on the shared host. The server keeps accepting connections until the host receives `SIGINT` or `SIGTERM`; a client's `Shutdown` closes only that connection.
+The `--ws` flag starts a WebSocket server on the given address. `ante serve --ws` requires a bearer token provided via the `ANTE_SERVE_TOKEN` environment variable and refuses to start without one. Clients must send `Authorization: Bearer <token>` in the upgrade request; missing or invalid tokens are rejected with HTTP 401, and handshakes time out after 10 seconds. Each client gets its own connection and session on the shared host. The server keeps accepting connections until the host receives `SIGINT` or `SIGTERM`; a client's `Shutdown` closes only that connection.
 
 :::note
 The transport flags are mutually exclusive — pick one of `--stdio`, `--sock`, or `--ws`.
 :::
 
 :::caution
-The address must be a loopback address (`127.0.0.0/8` or `::1`). Ante refuses to bind anything else — `0.0.0.0:8080` exits with an error rather than starting. The protocol has no authentication, so a listener on a routable interface would give any client that reaches it full tool execution on your machine. Reach a remote daemon through an SSH tunnel or an authenticating reverse proxy instead.
+The address must be a loopback address (`127.0.0.0/8` or `::1`). Ante refuses to bind anything else — `0.0.0.0:8080` exits with an error rather than starting. To access a daemon across machines, dial through an SSH tunnel or an authenticating reverse proxy with TLS (`wss://`).
 :::
 
 ## How it works
@@ -133,11 +133,13 @@ An `Endpoint` names where a host is reachable — never a session. Which session
 |---|---|---|
 | `stdio` | Spawns `ante serve --stdio` as its own child | Ends with the connection — dropping the op sender closes the child's stdin |
 | `unix:<path>` | Dials the socket file of an `ante serve --sock` host | Someone else's; the host outlives the connection |
-| `ws://<addr>` | Names a WebSocket host, but is not connectable yet | Someone else's |
+| `ws://<addr>`, `wss://<addr>` | Dials an `ante serve --ws` host, presenting `ConnectOptions::token` as its bearer | Someone else's; the host outlives the connection |
+
+Plain `ws://` is dialed only to loopback hosts; remote connections require `wss://` (under the opt-in `wss` feature) so the bearer token never travels across the network in cleartext.
 
 Every path yields the same `Client`, and a process that hosts sessions itself gets that same type from its host directly — the in-process channel carries the wire types the remote codecs serialize, so nothing a client can observe differs between them.
 
-`ConnectOptions` is all optional and applies to the spawned host on the `stdio` path: `executable` (defaults to `ante` on `PATH`), `args` appended after `serve --stdio`, `cwd`, and extra `env`. Connecting succeeds at the transport level — the pipe opened, or the socket dialed. There is no greeting, so the first op's reply is the liveness check.
+`ConnectOptions` is all optional and applies across transports: `executable` (defaults to `ante` on `PATH`), `args` appended after `serve --stdio`, `cwd`, extra `env`, and `token` (the bearer token sent when dialing `ws://` or `wss://`). Connecting succeeds at the transport level — the pipe opened, or the socket dialed. There is no greeting, so the first op's reply is the liveness check.
 
 ```rust
 // Dial a host someone else is running

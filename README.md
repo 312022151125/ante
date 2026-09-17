@@ -159,7 +159,7 @@ ante update
 ante update --channel nightly
 
 # Roll back or pin to an exact release
-ante update --version v0.preview.99
+ante update --version v0.2.0
 ```
 
 ## One binary, many agents
