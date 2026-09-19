@@ -8,7 +8,6 @@ pub struct OpenAiCompatProfile {
     thinking_dialect: ThinkingDialect,
     system_role: SystemRolePolicy,
     search: SearchPolicy,
-    send_images: bool,
     requires_assistant_reasoning: bool,
 }
 
@@ -102,22 +101,12 @@ enum OpenAiCompatFamily {
 }
 
 impl OpenAiCompatProfile {
-    pub fn from_model(provider_id: &str, model_id: &str, send_images: bool) -> Self {
+    pub fn from_model(provider_id: &str, model_id: &str) -> Self {
         let family = OpenAiCompatFamily::from_provider_model(provider_id, model_id);
-        Self::from_family(family, send_images, provider_id, model_id)
-    }
-
-    fn from_family(
-        family: OpenAiCompatFamily,
-        send_images: bool,
-        provider_id: &str,
-        model_id: &str,
-    ) -> Self {
         Self {
             thinking_dialect: family.thinking_dialect(provider_id, model_id),
             system_role: family.system_role(),
             search: family.search_policy(provider_id),
-            send_images,
             requires_assistant_reasoning: family.requires_assistant_reasoning(),
         }
     }
@@ -244,10 +233,6 @@ impl OpenAiCompatProfile {
 
     pub fn merges_system_messages(self) -> bool {
         matches!(self.system_role, SystemRolePolicy::Merged)
-    }
-
-    pub fn sends_images(self) -> bool {
-        self.send_images
     }
 
     pub fn requires_assistant_reasoning(self) -> bool {
@@ -550,7 +535,7 @@ mod tests {
     use super::*;
 
     fn profile(provider_id: &str, model_id: &str) -> OpenAiCompatProfile {
-        OpenAiCompatProfile::from_model(provider_id, model_id, false)
+        OpenAiCompatProfile::from_model(provider_id, model_id)
     }
 
     #[test]

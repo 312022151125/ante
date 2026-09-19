@@ -1,5 +1,29 @@
 # Changelog
 
+## v0.2.1 - 2026-09-19
+
+### Added
+- DeepSeek V4.1 Flash in the Antix catalog (`deepseek-flash`), with native vision support and reasoning effort controls
+- Fallback lookup for Cargo-installed external `ante-*` commands when `~/.cargo/bin` is missing from `PATH`
+
+### Changed
+- `TodoWrite` is now opt-in via `--include-tools TodoWrite`; default TUI sessions omit the pinned task list
+- `ante gateway` connects to a running Ante host (`ante serve --sock` or `--connect`) via the SDK rather than managing an in-process runtime
+- TUI working spinner delays appearance until three seconds into a turn, eliminating unnecessary animations on quick replies
+- Removed the built-in `ali-coding-plan` preset; users can configure it as a custom provider
+- Dependency updates
+
+### Fixed
+- Images are filtered out before sending to models that do not support vision, preventing API errors without altering saved history
+- Fullscreen TUI mode supports Shift+Enter for newline insertion in terminals with Kitty keyboard protocol support
+- Compaction summaries stream through the standard provider transport, inheriting the same timeout and error handling as regular turns
+- Provider credit exhaustion errors (HTTP 429) are classified as quota limits rather than transient rate limits, preventing minute-long retry loops
+- Bash commands receive the calling session ID in `ANTE_SESSION` instead of inheriting stale parent process values
+- Discord gateway replies route back to the original conversation without requiring explicit bot re-mentions
+
+### Crates
+- Public crates published as 0.2.1: ante-protocol-shape, ante-llm, ante-exec, ante-sdk
+
 ## v0.2.0 - 2026-09-17
 
 First numbered release, closing the `v0.preview.N` series. From now on, patch releases within a minor series stay compatible; intentional breaking changes move to a new minor series with migration notes.

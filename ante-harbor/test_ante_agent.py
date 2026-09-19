@@ -28,10 +28,13 @@ class _BaseInstalledAgent:
 
 def _install_harbor_stubs() -> None:
     modules = {
+        "pydantic": types.ModuleType("pydantic"),
         "harbor": types.ModuleType("harbor"),
         "harbor.agents": types.ModuleType("harbor.agents"),
+        "harbor.agents.capabilities": types.ModuleType("harbor.agents.capabilities"),
         "harbor.agents.installed": types.ModuleType("harbor.agents.installed"),
         "harbor.agents.installed.base": types.ModuleType("harbor.agents.installed.base"),
+        "harbor.agents.options": types.ModuleType("harbor.agents.options"),
         "harbor.environments": types.ModuleType("harbor.environments"),
         "harbor.environments.base": types.ModuleType("harbor.environments.base"),
         "harbor.models": types.ModuleType("harbor.models"),
@@ -43,6 +46,15 @@ def _install_harbor_stubs() -> None:
         "harbor.utils": types.ModuleType("harbor.utils"),
         "harbor.utils.trajectory_utils": types.ModuleType("harbor.utils.trajectory_utils"),
     }
+    # These tests cover shell and event contracts without runtime dependencies.
+    # The locked Harbor suite validates the real options model and preflight.
+    modules["pydantic"].Field = lambda *, default=None, **kwargs: default
+    modules["pydantic"].field_validator = lambda *args, **kwargs: lambda value: value
+    modules["harbor.agents.capabilities"].AgentCapabilities = _Model
+    options = modules["harbor.agents.options"]
+    options.InstalledAgentOptions = _Model
+    options.Cli = _Model
+    options.Env = _Model
     base = modules["harbor.agents.installed.base"]
     for name in (
         "AgentAuthenticationError",
@@ -59,8 +71,6 @@ def _install_harbor_stubs() -> None:
     ):
         setattr(base, name, type(name, (Exception,), {}))
     base.BaseInstalledAgent = _BaseInstalledAgent
-    base.CliFlag = _Model
-    base.EnvVar = _Model
     base.with_prompt_template = lambda function: function
     modules["harbor.environments.base"].BaseEnvironment = _Model
     modules["harbor.models.agent.context"].AgentContext = _Model
@@ -161,7 +171,7 @@ class AdapterMetadataTests(unittest.TestCase):
         agent = object.__new__(ante_agent.AnteAgent)
         agent._version = "1.2.3"
         agent.model_name = "deepseek/deepseek-v4-flash-0731"
-        agent._provider = "openrouter"
+        agent.options = ante_agent.AnteOptions(provider="openrouter")
 
         info = agent.to_agent_info()
 
