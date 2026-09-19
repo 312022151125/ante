@@ -189,42 +189,6 @@ ante --provider deepseek --model deepseek-flash
 
 需配置环境变量 `DEEPSEEK_API_KEY`，可选配置 `DEEPSEEK_BASE_URL`。
 
-### Ali Coding Plan（阿里代码计划） {#ali-coding-plan}
-
-| 模型 ID | 说明 | 上下文大小 |
-|---|---|---|
-| `qwen3.5-plus` | 支持视觉的 Qwen 3.5 Plus | 1M |
-| `qwen3.6-plus` | 最新的 Qwen 3.6 Plus（带视觉） | 1M |
-| `glm-5.1` | GLM-5.1 模型 | 200K |
-| `MiniMax-M2.5` | MiniMax M2.5 模型 | 205K |
-| `qwen3-max-2026-01-23` | Qwen 3 Max 快照版本 | 1M |
-| `qwen3-coder-next` | Qwen 3 Coder Next 代码模型 | 1M |
-| `qwen3-coder-plus` | Qwen 3 Coder Plus 代码模型 | 1M |
-| `qwen-plus` | 快速且高能力 | 1M |
-
-```bash
-ante --provider ali-coding-plan --model qwen3.5-plus
-```
-
-需要开通[阿里云百炼代码计划订阅](https://help.aliyun.com/zh/model-studio/coding-plan)并获取 API 密钥（格式如：`sk-sp-xxxxx`）。内置提供商采用 Anthropic 协议端点。部分模型仅在 OpenAI 兼容端点提供 —— 可通过自定义目录项添加接入：
-
-```json
-{
-  "providers": {
-    "ali-coding-plan-oai": {
-      "display_name": "Ali Coding Plan (OpenAI)",
-      "base_url": "https://coding.dashscope.aliyuncs.com/v1",
-      "auth": { "bearer": { "env_key": "ALI_CODING_PLAN_API_KEY" } },
-      "wire_style": "OpenAiCompatible",
-      "http_headers": {
-        "User-Agent": "ante-cli/1.0.0",
-        "X-DashScope-UserAgent": "coding-agent"
-      }
-    }
-  }
-}
-```
-
 ### Antix {#antix}
 
 `antix`（OAuth）与 `antix-api-key`（API Key）通过 Antigma 平台提供相同模型：
@@ -250,7 +214,7 @@ ante --provider ali-coding-plan --model qwen3.5-plus
 | `gpt-5.3-codex` | 针对代码深度优化的 Codex 模型 | — |
 | `gpt-5.4-mini` | 更快、更经济的 GPT-5.4 模型 | 400K |
 | `gpt-5.4-nano` | GPT-5.4 家族最小轻量模型 | 400K |
-| `deepseek-v4-flash` | 高速 DeepSeek V4 Flash | 1M |
+| `deepseek-flash` | DeepSeek V4.1 Flash 原生多模态视觉模型 | 1M |
 | `glm-5.3` | 最新 GLM-5.3 模型，适用于编程与智能体任务 | 1M |
 | `glm-5.3-flash` | 快速 GLM-5.3 Flash，适用于编程与智能体任务 | 1M |
 
@@ -426,7 +390,7 @@ Skipped 1 entry in ~/.ante/catalog.json:
 | `effort` | 默认[思考深度等级](/usage/models-and-thinking#effort) —— `min`、`low`、`medium`、`high`、`xhigh` 或 `max`。不支持推理调节的模型请省略（Ante 不会发送 effort 参数并隐藏滑块） |
 | `supported_efforts` | 该模型在当前提供商上接受的思考深度级别，按升序排列（取值同 `effort`）。它会替换内置档位：滑块只显示这些级别，OpenAI 兼容提供商会发送同名 `reasoning_effort`（`min` 在线上拼写为 `minimal`）。空列表表示模型不接受思考深度设置；省略则保留内置档位 |
 | `weight_class` | 规模/成本等级 —— `Feather`（轻量/快速/低成本）、`Middle`（中等）或 `Heavy`（最大/能力最强）。驱动默认模型与辅助模型选取（参见[权重等级](#weight-classes)） |
-| `support_vision` | 是否支持图片输入。省略时 Ante 根据模型 ID 自动推断；对无视觉支持的模型读取图片时返回图片元数据而非像素 |
+| `support_vision` | 是否支持图片输入。省略时 Ante 根据模型 ID 自动推断；发送给不支持视觉的模型之前会自动过滤掉图片内容，避免 API 报错且不影响保存的历史记录（对无视觉支持的模型读取图片时返回图片元数据而非像素） |
 
 顶层 `models` 可在解析阶段针对模型 ID 原地打补丁，层叠在标准规格之上。内置预设中该部分为空：
 

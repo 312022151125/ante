@@ -11,10 +11,14 @@ description: "将 Ante 作为长寿命机器人接入 Slack 或 Discord"
 ## 基础用法 {#basic-usage}
 
 ```bash
+# 首先启动 Ante 宿主服务
+ante serve --sock
+
+# 在另一个终端中启动网关
 ante gateway
 ```
 
-此命令将读取 `~/.ante/channels.json`，连接您启用的所有平台，并开始监听消息。
+`ante gateway` 通过 Ante SDK 连接到正在运行的 Ante 宿主（`ante serve --sock` 或通过 `--connect`），而非在进程内直接管理运行时。它会读取 `~/.ante/channels.json`，连接您启用的所有平台，并开始监听消息。
 
 ## 配置文件 {#configuration}
 
@@ -79,7 +83,7 @@ export SLACK_APP_TOKEN="xapp-..."
 export DISCORD_BOT_TOKEN="..."
 ```
 
-**在 Discord 中使用机器人：** 在服务器频道中 `@提及` 机器人，或发送私聊 DM。机器人会通过引用回复你的消息 —— 直接回复机器人的消息即可继续对话。
+**在 Discord 中使用机器人：** 在服务器频道中 `@提及` 机器人，或发送私聊 DM。机器人会通过引用回复你的消息 —— 直接回复机器人的消息即可继续对话（会话讨论串中的后续回复会自动路由回原对话，无需重复显式 @提及）。
 
 ## 与机器人交互 {#talking-to-the-bot}
 
@@ -104,19 +108,19 @@ export DISCORD_BOT_TOKEN="..."
 ## 命令行参数参考 {#cli-reference}
 
 ```bash
-ante gateway [--config PATH] [--model MODEL] [--provider PROVIDER] [--output-format FORMAT] [--offline-model PATH]
+ante gateway [--config PATH] [--connect ENDPOINT] [--model MODEL] [--provider PROVIDER] [--output-format FORMAT]
 ```
 
 | 参数标识 | 默认值 | 说明 |
 | --- | --- | --- |
 | `--config` | `~/.ante/channels.json` | 渠道配置文件的路径 |
-| `--model` | `local` | 所有会话使用的大语言模型 |
-| `--provider` | `local` | 所选模型的提供商 |
+| `--connect` | `unix:~/.ante/run/serve.sock` | Ante 宿主端点：`unix:<path>`、`ws://<addr>`、`wss://<addr>` 或 `stdio`。可通过 `ante serve --sock` 启动宿主 |
+| `--model` | — | 请求的模型（未指定时使用宿主设置） |
+| `--provider` | — | 请求的提供商（未指定时由宿主解析） |
 | `--output-format` | `minimal` | 网关 stdout 输出格式：`minimal`、`human` 或 `json` |
-| `--offline-model` | — | 本地 GGUF 文件路径。在接受消息前启动共享的 `llama serve` 路由器，并将所有对话路由至该服务（强制使用 `--provider local --model local`） |
 
 :::tip
-默认配置假定使用本地 llama.cpp 服务器或路由器。若需使用云端托管提供商，请显式传入 `--provider` 和 `--model`（例如 `ante gateway --provider anthropic --model claude-sonnet-5`）。
+默认情况下，`ante gateway` 连接本地宿主套接字 `unix:~/.ante/run/serve.sock`。若需连接其他端点，请传入 `--connect`（例如 `ante gateway --connect unix:/tmp/ante.sock`）。
 :::
 
 ### 输出格式 {#output-formats}

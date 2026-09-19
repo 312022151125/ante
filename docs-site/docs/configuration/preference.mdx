@@ -284,7 +284,6 @@ Settings can be overridden per-session via CLI flags.
 | `OPENROUTER_API_KEY` | API key for Open Router |
 | `ZAI_API_KEY` | API key for Zai |
 | `DEEPSEEK_API_KEY` | API key for DeepSeek |
-| `ALI_CODING_PLAN_API_KEY` | API key for Ali Coding Plan |
 | `ANTIX_API_KEY` | API key for Antix |
 | `MODEL_BASE_URL` | Global fallback base URL (overridden by per-provider vars below) |
 | `ANTHROPIC_BASE_URL` | Override the Anthropic base URL |
@@ -325,11 +324,11 @@ Exports are anonymous by default. There is no username fallback, no hostname, no
 | Identifier | Source | Purpose |
 |---|---|---|
 | Run id | Random per process, never persisted | Gives each concurrently running Ante its own metric series, which cumulative counters require. Exported as `service.instance.id` on metrics only. |
-| Installation id | A random memorable label such as `clever-otter-x7f2`, stored in `~/.ante/installation-id` | Distinguishes "one machine reported 500 errors" from "500 machines did". Minted at the first startup that has telemetry configured, and word-shaped so you can quote it in a bug report — `ante rage` includes it. The words encode nothing about you, your host, or any account. |
+| Installation id | A random memorable label such as `clever-otter-x7f2`, stored in `~/.ante/installation-id` | Distinguishes "one machine reported 500 errors" from "500 machines did". Minted at the first startup that has telemetry configured, and word-shaped so you can quote it in a bug report — `ante rage` includes it. The words encode nothing about you, your host, or any account. You can edit this file to change its content to a common name like `anon` or anything you like. |
 | `user.name` | `ANTE_USER`, explicit only | Names whoever operates a deployment. CI and eval runners set it; a laptop leaves it unset. |
 | `user.id` | `ANTE_USER_ID`, explicit only | An operator-chosen identifier when a name isn't the right shape. |
 
-Delete `~/.ante/installation-id` to reset to a fresh identity; it is recreated on the next run that has telemetry configured. A home directory Ante cannot read or write simply reports without one. Deployments can also group data with `ANTE_ENV` (default: `local`).
+You can edit `~/.ante/installation-id` to change the identifier to a common label like `anon` or any name you prefer, or delete `~/.ante/installation-id` to reset to a fresh identity (it is recreated on the next run that has telemetry configured). A home directory Ante cannot read or write simply reports without one. Deployments can also group data with `ANTE_ENV` (default: `local`).
 
 All application tracing records that pass the active `RUST_LOG` filter are exported too. Log *bodies* are not scrubbed, so a message that interpolates a home path or a tool argument still carries it even though no attribute names you — only point `OTEL_EXPORTER_OTLP_ENDPOINT` at a collector you trust.
 

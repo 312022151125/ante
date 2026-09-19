@@ -84,7 +84,6 @@ Ante 具备跨提供商无关性。每个提供商均实现了发送提示词与
 | Open Router Responses | Responses API | 通过 OpenRouter 调用的 GPT 模型 |
 | Open Router Anthropic | Messages API | 通过 OpenRouter 调用的 Claude 模型 |
 | DeepSeek | OpenAI 兼容格式 | DeepSeek V4 家族 |
-| Ali Coding Plan | Messages API | 通过 DashScope 调用的 Qwen、Kimi、GLM、MiniMax |
 | Antix | Anthropic Messages | 通过 Antigma 调用的 Claude、GPT、Gemini、Qwen、DeepSeek |
 | Antix (API key) | Anthropic Messages | 相同 Antix 目录，通过 API Key 认证 |
 | Local | OpenAI 兼容格式 | 通过 llama.cpp 运行的 GGUF 模型 |
@@ -93,7 +92,7 @@ Ante 具备跨提供商无关性。每个提供商均实现了发送提示词与
 
 ### 身份认证 {#authentication}
 
-- **API 密钥** — 通过环境变量配置（`ANTHROPIC_API_KEY`、`OPENAI_API_KEY`、`GEMINI_API_KEY`、`XAI_API_KEY`、`OPENROUTER_API_KEY`、`OPENAI_COMPATIBLE_API_KEY`、`ZAI_API_KEY`、`DEEPSEEK_API_KEY`、`ALI_CODING_PLAN_API_KEY`、`VERTEX_GEMINI_API_KEY`、`ANTIX_API_KEY`）
+- **API 密钥** — 通过环境变量配置（`ANTHROPIC_API_KEY`、`OPENAI_API_KEY`、`GEMINI_API_KEY`、`XAI_API_KEY`、`OPENROUTER_API_KEY`、`OPENAI_COMPATIBLE_API_KEY`、`ZAI_API_KEY`、`DEEPSEEK_API_KEY`、`VERTEX_GEMINI_API_KEY`、`ANTIX_API_KEY`）
 - **OAuth** — Anthropic、OpenAI 与 Antix 支持交互式 OAuth 登录，在 TUI 中直接完成向导
 
 ## 工具系统 {#tool-system}
@@ -119,7 +118,7 @@ pub trait Tool: Send + Sync {
 | `Grep` | 文件 I/O | 否 | 使用正则表达式搜索文件内容 |
 | `Bash` | Shell | 是 | 执行 Shell 命令；当命令超出 `max_wait_ms` 窗口时返回持久句柄 |
 | `Agent` | 内置核心 | 否 | 派生子智能体处理复杂任务 |
-| `TodoWrite` | 内置核心 | 否 | 维护任务进度清单 |
+| `TodoWrite` | 内置核心 | 否 | 维护任务进度清单（可选工具） |
 | `WebFetch` | 内置核心 | 是 | 获取并处理网页内容 |
 | `WebSearch` | 内置核心 | 是 | 检索互联网（在支持网络搜索的提供商上自动启用） |
 | `ViewImage` | 内置核心 | 否 | 读取并分析图片（可选工具） |

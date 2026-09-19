@@ -44,7 +44,7 @@ Grep 会在页脚报告无法读取、解码、打开或过大的文件。与 Gl
 
 ### Bash {#bash}
 
-执行 Shell 命令。每次调用均在独立的非交互子进程中运行 —— 进程状态不跨调用持久化。可选的 `max_wait_ms` 字段控制 Ante 在内联等待命令完成的时长（默认 `10000`ms，限制在 `250`–`600000`ms 之间）。超出该等待窗口**绝不会**杀死命令或触发超时：Ante 会返回位于 `~/.ante/run/jobs/<proc-id>/` 下的后台任务句柄，包含 pid、部分输出以及持续追加写入的 `status.json`、`stdout.txt` 和 `stderr.txt` 文件。对于服务或监听进程建议传入如 `250` 的短窗口；请勿附加 `&`（属于多余符号且会被自动剥离）。
+执行 Shell 命令。每次调用均在独立的非交互子进程中运行 —— 进程状态不跨调用持久化。命令在 `ANTE_SESSION` 环境变量中接收调用方的当前会话 ID，避免继承过期的父进程值。可选的 `max_wait_ms` 字段控制 Ante 在内联等待命令完成的时长（默认 `10000`ms，限制在 `250`–`600000`ms 之间）。超出该等待窗口**绝不会**杀死命令或触发超时：Ante 会返回位于 `~/.ante/run/jobs/<proc-id>/` 下的后台任务句柄，包含 pid、部分输出以及持续追加写入的 `status.json`、`stdout.txt` 和 `stderr.txt` 文件。对于服务或监听进程建议传入如 `250` 的短窗口；请勿附加 `&`（属于多余符号且会被自动剥离）。
 
 若命令在等待窗口内执行完毕，Ante 会直接在内联返回输出并显式清理句柄文件。一旦返回后台句柄，该任务在 Ante 重启后依然存活且活跃期间绝不被回收；任务结束后，其目录在闲置保留 24 小时后会在后续启动时统一回收。后台任务退出时，Ante 会在模型的下一个步骤边界或轮次开始时以通知块的形式自动将完成通知重新注入会话（包含退出码、运行时长、输出尾部及文件路径），无需手动轮询状态或设置长时间等待。在返回句柄前中断 Bash 调用会终止整个进程组（包含子进程与孙进程）。要停止已经转入后台运行的任务，请使用 `kill -- -<pid>` 向其进程组发送信号。需要审批。
 
@@ -58,10 +58,6 @@ Grep 会在页脚报告无法读取、解码、打开或过大的文件。与 Gl
 
 派生子智能体以自主处理复杂任务。智能体根据任务特征自动挑选委派的子智能体，并可按需传入单次调用的 `model` 参数覆盖该子任务的模型（未指定时回退到子智能体定义或当前会话模型）。
 
-### TodoWrite {#todowrite}
-
-通过任务清单维护多步骤工作的执行进度。
-
 ### AskUser {#askuser}
 
 在轮次进行中向用户提出 1 到 4 个结构化的多选题，以澄清意图或确认决策。TUI 会在输入框区域以交互组件形式渲染问题，支持选项预览、自由文本补充说明和多选；按 Enter 确认推荐选项，按 Esc 跳过以交由模型自行判断，点击“继续讨论”可返回正常对话。在 Slack / Discord 等网关中，问题会渲染为编号选项。子智能体不配备 `AskUser`，且无人值守会话不会因提问而挂起暂停。
@@ -72,11 +68,15 @@ Grep 会在页脚报告无法读取、解码、打开或过大的文件。与 Gl
 
 ### WebSearch {#websearch}
 
-检索互联网并返回带引用的搜索结果。需要审批。使用模型提供商的原生网络搜索能力，因此仅在声明了 `supports_web_search` 的提供商（Anthropic、OpenAI、Gemini、Grok、OpenRouter、Antix 和 Ali Coding Plan）下可用，并在这些提供商上自动加入工具集；其他提供商不提供该工具。单次搜索设有 90 秒上限 —— 超时报错并建议使用更窄的查询词，避免挂起整个工具调用批次。
+检索互联网并返回带引用的搜索结果。需要审批。使用模型提供商的原生网络搜索能力，因此仅在声明了 `supports_web_search` 的提供商（Anthropic、OpenAI、Gemini、Grok、OpenRouter 和 Antix）下可用，并在这些提供商上自动加入工具集；其他提供商不提供该工具。单次搜索设有 90 秒上限 —— 超时报错并建议使用更窄的查询词，避免挂起整个工具调用批次。
 
 ## 可选工具 {#opt-in-tools}
 
 这些工具默认未开启。可通过 `--include-tools` 显式启用。
+
+### TodoWrite {#todowrite}
+
+通过任务清单维护多步骤工作的执行进度。默认 TUI 会话不再置顶任务清单；可通过 `--include-tools TodoWrite` 显式开启。
 
 ### ViewImage {#viewimage}
 
@@ -88,9 +88,9 @@ Grep 会在页脚报告无法读取、解码、打开或过大的文件。与 Gl
 
 ## 默认工具集 {#default-tool-set}
 
-Ante 默认启用 `Read`、`Bash`、`Grep`、`Glob`、`TodoWrite`、`AskUser`、`WebFetch`、`Edit`、`Write` 和 `Agent`。当会话的提供商支持原生网络搜索时，会自动追加 `WebSearch`。
+Ante 默认启用 `Read`、`Bash`、`Grep`、`Glob`、`AskUser`、`WebFetch`、`Edit`、`Write` 和 `Agent`。当会话的提供商支持原生网络搜索时，会自动追加 `WebSearch`。
 
-`ViewImage` 为可选启用工具。
+`TodoWrite` 与 `ViewImage` 为可选启用工具。
 
 ## 工具过滤控制 {#tool-filtering}
 
@@ -101,7 +101,7 @@ Ante 默认启用 `Read`、`Bash`、`Grep`、`Glob`、`TodoWrite`、`AskUser`、
 ante --tools Read,Glob,Grep -p "分析代码"
 
 # 在默认集基础上引入可选工具
-ante --include-tools ViewImage -p "描述 assets/ 中的截图"
+ante --include-tools TodoWrite,ViewImage -p "描述 assets/ 中的截图"
 
 # 剔除指定工具
 ante --exclude-tools Bash,Write -p "纯只读分析"

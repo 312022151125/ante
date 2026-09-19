@@ -160,21 +160,22 @@ ante serve --ws 127.0.0.1:8080
 ante gateway [OPTIONS]
 ```
 
-Gateway mode connects Ante to Slack, Discord, or both using the channels config file.
+Gateway mode connects Ante to Slack, Discord, or both using the channels config file. It connects to a running Ante host via the SDK rather than managing an in-process runtime.
 
 | Flag | Default | Description |
 |---|---|---|
 | `--config <PATH>` | `~/.ante/channels.json` | Path to the channels configuration file. |
-| `--model <MODEL>` | `local` | Model to use for agent sessions. |
-| `--provider <PROVIDER>` | `local` | Provider to use for agent sessions. |
+| `--connect <ENDPOINT>` | `unix:~/.ante/run/serve.sock` | Ante host endpoint: `unix:<path>`, `ws://<addr>`, `wss://<addr>`, or `stdio`. Start a host with `ante serve --sock`. |
+| `--model <MODEL>` | — | Model to request (otherwise uses host settings). |
+| `--provider <PROVIDER>` | — | Provider to request (otherwise resolved by host). |
 | `--output-format <FORMAT>` | `minimal` | Gateway stdout format: `json`, `human`, or `minimal`. |
-| `--offline-model <PATH>` | - | Load a local GGUF model for all gateway conversations. |
 | `-h`, `--help` | - | Print command help. |
 
 ### Examples
 
 ```bash
 ante gateway
+ante gateway --connect unix:/tmp/ante.sock
 ante gateway --provider anthropic --model claude-sonnet-5
 ante gateway --config ./channels.json --output-format human
 ```
@@ -194,7 +195,7 @@ The update command checks for a newer Ante release and installs it when one is a
 | Flag | Description |
 |---|---|
 | `--channel <CHANNEL>` | Release channel to update from. Equivalent to the positional form. |
-| `--version <VERSION>` | Install an exact release instead of the channel's newest release. Accepts values with or without a leading `v`, such as `v0.2.0` or `0.2.0`. Conflicts with channel arguments. |
+| `--version <VERSION>` | Install an exact release instead of the channel's newest release. Accepts values with or without a leading `v`, such as `v0.2.1` or `0.2.1`. Conflicts with channel arguments. |
 | `-h`, `--help` | Print command help. |
 
 ### Examples
@@ -203,7 +204,7 @@ The update command checks for a newer Ante release and installs it when one is a
 ante update
 ante update nightly
 ante update --channel stable
-ante update --version v0.2.0
+ante update --version v0.2.1
 ante --profile work update
 ```
 
@@ -309,7 +310,7 @@ An unrecognized command name dispatches to an executable named `ante-<name>`, fo
 ante deploy --target production
 ```
 
-Ante searches `~/.ante/bin` before `PATH`, passes remaining arguments through unchanged, and mirrors the application's exit status. Built-in subcommands always win, so an external executable cannot shadow `ante update` or another built-in. If no executable is found, Ante reports exit status `127` and still suggests a similarly named built-in for likely typos.
+Ante searches `~/.ante/bin` before `PATH`, falls back to `~/.cargo/bin` if missing from `PATH`, passes remaining arguments through unchanged, and mirrors the application's exit status. Built-in subcommands always win, so an external executable cannot shadow `ante update` or another built-in. If no executable is found, Ante reports exit status `127` and still suggests a similarly named built-in for likely typos.
 
 External applications receive `ANTE` (the absolute path to the Ante binary), `ANTE_APP` (the resolved app name), and the selected `ANTE_PROFILE` when one is active. Like help and usage errors, dispatch occurs before Ante starts its runtime, logging, telemetry, or crash hook.
 

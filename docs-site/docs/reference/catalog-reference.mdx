@@ -189,42 +189,6 @@ ante --provider deepseek --model deepseek-flash
 
 Set `DEEPSEEK_API_KEY`, and optionally `DEEPSEEK_BASE_URL`.
 
-### Ali Coding Plan
-
-| Model | Description | Context |
-|---|---|---|
-| `qwen3.5-plus` | Qwen 3.5 Plus with vision | 1M |
-| `qwen3.6-plus` | Latest Qwen 3.6 Plus with vision | 1M |
-| `glm-5.1` | GLM-5.1 model | 200K |
-| `MiniMax-M2.5` | MiniMax M2.5 model | 205K |
-| `qwen3-max-2026-01-23` | Qwen 3 Max snapshot | 1M |
-| `qwen3-coder-next` | Qwen 3 Coder Next coding model | 1M |
-| `qwen3-coder-plus` | Qwen 3 Coder Plus coding model | 1M |
-| `qwen-plus` | Fast and capable | 1M |
-
-```bash
-ante --provider ali-coding-plan --model qwen3.5-plus
-```
-
-Requires a [Coding Plan subscription](https://help.aliyun.com/zh/model-studio/coding-plan) and API key (format: `sk-sp-xxxxx`). The built-in provider speaks the Anthropic wire endpoint. Some models are only available on the OpenAI-compatible endpoint — add a custom catalog entry to reach it:
-
-```json
-{
-  "providers": {
-    "ali-coding-plan-oai": {
-      "display_name": "Ali Coding Plan (OpenAI)",
-      "base_url": "https://coding.dashscope.aliyuncs.com/v1",
-      "auth": { "bearer": { "env_key": "ALI_CODING_PLAN_API_KEY" } },
-      "wire_style": "OpenAiCompatible",
-      "http_headers": {
-        "User-Agent": "ante-cli/1.0.0",
-        "X-DashScope-UserAgent": "coding-agent"
-      }
-    }
-  }
-}
-```
-
 ### Antix
 
 `antix` (OAuth) and `antix-api-key` (API key) serve the same models through Antigma:
@@ -250,7 +214,7 @@ Requires a [Coding Plan subscription](https://help.aliyun.com/zh/model-studio/co
 | `gpt-5.3-codex` | Coding-optimized Codex model | — |
 | `gpt-5.4-mini` | Faster, cheaper GPT-5.4 model | 400K |
 | `gpt-5.4-nano` | Smallest GPT-5.4 model | 400K |
-| `deepseek-v4-flash` | Fast DeepSeek V4 Flash | 1M |
+| `deepseek-flash` | DeepSeek V4.1 Flash with native vision | 1M |
 | `glm-5.3` | Latest GLM-5.3 model for coding and agentic tasks | 1M |
 | `glm-5.3-flash` | Fast GLM-5.3 Flash for coding and agentic tasks | 1M |
 
@@ -428,7 +392,7 @@ The same fields describe a model fully inside a provider's `preferred_models` (w
 | `effort` | Default [effort level](/usage/models-and-thinking#effort) — `min`, `low`, `medium`, `high`, `xhigh`, or `max`. Omit for models with no reasoning knob (Ante then sends no effort parameter and hides the effort slider). |
 | `supported_efforts` | The effort levels this model accepts on this provider, ascending (same values as `effort`). Replaces the built-in ladder: the effort slider shows exactly these levels, and OpenAI-compatible providers send the selected level as the same-named `reasoning_effort` (`min` is sent as `minimal`). An empty list declares that the model takes no effort setting. Omit to keep the built-in ladder. |
 | `weight_class` | Size/cost tier — `Feather`, `Middle`, or `Heavy`. Drives automatic default and auxiliary model selection (see [Weight classes](#weight-classes)). |
-| `support_vision` | Whether the model accepts image input. When omitted, Ante infers it from the model id; an image read against a model with no vision support returns the image's metadata instead of its pixels. |
+| `support_vision` | Whether the model accepts image input. When omitted, Ante infers it from the model id; images are filtered out before sending to models that do not support vision, preventing API errors without altering saved history (reading an image against a non-vision model returns its metadata instead of pixels). |
 
 The `models` section patches a model by id wherever it is defined, layering on top of the canonical spec at resolve time. The built-in presets leave it empty:
 

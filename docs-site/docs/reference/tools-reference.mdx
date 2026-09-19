@@ -43,7 +43,7 @@ Grep reports skipped unreadable, undecodable, oversized, or failed files in its 
 
 ### Bash
 
-Execute shell commands. Each call runs in a fresh non-interactive process — shell state does not persist between calls. The optional `max_wait_ms` field controls how long Ante waits for the command to finish inline (default `10000`, clamped to `250`–`600000`). Expiring that window never kills or times out the command: Ante returns a background handle under `~/.ante/run/jobs/<proc-id>/` with its pid, partial output, and growing `status.json`, `stdout.txt`, and `stderr.txt` files. Use a short window such as `250` for a server or watcher; do not append `&`, which is redundant and stripped automatically.
+Execute shell commands. Each call runs in a fresh non-interactive process — shell state does not persist between calls. Commands receive the calling session ID in `ANTE_SESSION` instead of inheriting stale parent process values. The optional `max_wait_ms` field controls how long Ante waits for the command to finish inline (default `10000`, clamped to `250`–`600000`). Expiring that window never kills or times out the command: Ante returns a background handle under `~/.ante/run/jobs/<proc-id>/` with its pid, partial output, and growing `status.json`, `stdout.txt`, and `stderr.txt` files. Use a short window such as `250` for a server or watcher; do not append `&`, which is redundant and stripped automatically.
 
 If the command finishes inside the window, Ante returns its output inline and explicitly discards the handle files. After a background handle has been returned, the job survives Ante restarts and is never collected while live; once settled, its directory is collected on a later startup after sitting unchanged for 24 hours. When a background job exits, its completion notification automatically re-enters the session at the model's next step boundary or turn start (delivering a notification block with exit code, duration, output tails, and file paths), removing the need for manual polling loops or long wait windows. Interrupting a Bash call before it returns a handle terminates the whole process group, including child and grandchild processes. To stop an already-backgrounded job, send a signal to its process group with `kill -- -<pid>`. Requires approval.
 
@@ -57,10 +57,6 @@ For interactive programs and persistent shells, the agent drives durable named t
 
 Spawn a sub-agent to handle a task autonomously. The agent picks which sub-agent to delegate to based on the task, and can optionally specify a per-call `model` parameter to override the subtask's model (falling back to the agent definition or current session model).
 
-### TodoWrite
-
-Track progress on multi-step work with a task list.
-
 ### AskUser
 
 Ask structured multiple-choice questions (one to four questions) mid-turn to clarify ambiguity or confirm decisions. The TUI renders questions in place of the composer with option previews, free-text notes, and multi-select support; Enter selects the recommended option, Esc skips so the model proceeds on its own judgment, and "Chat about this" returns to conversation. In channel gateways (Slack/Discord), questions render as numbered choices. Subagents do not receive `AskUser`, and unattended sessions never pause for questions.
@@ -71,11 +67,15 @@ Fetch a URL and return its contents directly for the active model to analyze, co
 
 ### WebSearch
 
-Search the web and return results with citations. Requires approval. Uses the provider's native web search, so it is available only on a provider that advertises `supports_web_search` (Anthropic, OpenAI, Gemini, Grok, OpenRouter, Antix, and Ali Coding Plan). On those providers it is added to the tool set automatically; on others it is not offered. A search is capped at 90 seconds — past that it fails with an error suggesting a narrower query instead of hanging the tool batch.
+Search the web and return results with citations. Requires approval. Uses the provider's native web search, so it is available only on a provider that advertises `supports_web_search` (Anthropic, OpenAI, Gemini, Grok, OpenRouter, and Antix). On those providers it is added to the tool set automatically; on others it is not offered. A search is capped at 90 seconds — past that it fails with an error suggesting a narrower query instead of hanging the tool batch.
 
 ## Opt-in tools
 
 These are not enabled by default. Turn them on with `--include-tools`.
+
+### TodoWrite
+
+Track progress on multi-step work with a task list. Default TUI sessions omit the pinned task list; enable it with `--include-tools TodoWrite`.
 
 ### ViewImage
 
@@ -87,9 +87,9 @@ Tools provided by configured [MCP servers](/extend/mcp) are exposed to the agent
 
 ## Default tool set
 
-By default Ante enables `Read`, `Bash`, `Grep`, `Glob`, `TodoWrite`, `AskUser`, `WebFetch`, `Edit`, `Write`, and `Agent`. `WebSearch` is added automatically when the session's provider supports native web search.
+By default Ante enables `Read`, `Bash`, `Grep`, `Glob`, `AskUser`, `WebFetch`, `Edit`, `Write`, and `Agent`. `WebSearch` is added automatically when the session's provider supports native web search.
 
-`ViewImage` is opt-in.
+`TodoWrite` and `ViewImage` are opt-in.
 
 ## Tool filtering
 
@@ -100,7 +100,7 @@ Control which tools are available in a session:
 ante --tools Read,Glob,Grep -p "analyze the code"
 
 # Add opt-in tools on top of the default set
-ante --include-tools ViewImage -p "describe the screenshots in assets/"
+ante --include-tools TodoWrite,ViewImage -p "describe the screenshots in assets/"
 
 # Remove these tools
 ante --exclude-tools Bash,Write -p "read-only analysis"

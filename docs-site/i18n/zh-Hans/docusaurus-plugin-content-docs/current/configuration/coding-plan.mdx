@@ -6,9 +6,58 @@ description: "在 Ante 中接入第三方代码订阅套餐与专属大额 API"
 
 许多大模型提供商（包括阿里云/通义千问、MiniMax、Kimi、字节跳动/火山引擎、智谱 z.ai 等）均推出了高性价比的 Coding 开发者专属订阅套餐，为 AI 编程工具提供充沛的每月 Token 额度。由于这些套餐普遍暴露标准的 Anthropic 或 OpenAI 兼容端点，Ante 可以开箱即用地无缝接入。
 
-## 阿里代码计划（内置支持） {#ali-coding-plan-built-in}
+## 阿里代码计划 {#ali-coding-plan}
 
-Ante 原生内置了 `ali-coding-plan` 提供商预设。详细的模型列表与参数配置请参见[目录参考手册](/reference/catalog-reference#ali-coding-plan)。
+可通过在 `~/.ante/catalog.json` 中添加自定义提供商接入[阿里云百炼代码计划](https://help.aliyun.com/zh/model-studio/coding-plan)。
+
+采用兼容 Anthropic 协议端点：
+
+```json
+{
+  "providers": {
+    "ali-coding-plan": {
+      "display_name": "Ali Coding Plan",
+      "base_url": "https://coding.dashscope.aliyuncs.com/apps/anthropic",
+      "auth": { "bearer": { "env_key": "ALI_CODING_PLAN_API_KEY" } },
+      "wire_style": "AnthropicMessage",
+      "preferred_models": [
+        { "id": "qwen3.5-plus", "description": "支持视觉的 Qwen 3.5 Plus", "context_limit": 1000000 },
+        { "id": "qwen3.6-plus", "description": "最新的 Qwen 3.6 Plus（带视觉）", "context_limit": 1000000 },
+        { "id": "glm-5.1", "description": "GLM-5.1 模型", "context_limit": 200000 },
+        { "id": "MiniMax-M2.5", "description": "MiniMax M2.5 模型", "context_limit": 205000 },
+        { "id": "qwen3-coder-next", "description": "Qwen 3 Coder Next", "context_limit": 1000000 },
+        { "id": "qwen3-coder-plus", "description": "Qwen 3 Coder Plus", "context_limit": 1000000 }
+      ]
+    }
+  }
+}
+```
+
+部分模型仅在 OpenAI 兼容端点提供：
+
+```json
+{
+  "providers": {
+    "ali-coding-plan-oai": {
+      "display_name": "Ali Coding Plan (OpenAI)",
+      "base_url": "https://coding.dashscope.aliyuncs.com/v1",
+      "auth": { "bearer": { "env_key": "ALI_CODING_PLAN_API_KEY" } },
+      "wire_style": "OpenAiCompatible",
+      "http_headers": {
+        "User-Agent": "ante-cli/1.0.0",
+        "X-DashScope-UserAgent": "coding-agent"
+      }
+    }
+  }
+}
+```
+
+配置 API 密钥并运行 Ante：
+
+```bash
+export ALI_CODING_PLAN_API_KEY="sk-sp-xxxxx"
+ante --provider ali-coding-plan --model qwen3.5-plus
+```
 
 ## 通用代码套餐接入 {#generic-coding-plans}
 

@@ -282,7 +282,6 @@ seq 1 200; printf '\033[2J\033[3J\033[H'
 | `OPENROUTER_API_KEY` | Open Router API 密钥 |
 | `ZAI_API_KEY` | 智谱 Zai API 密钥 |
 | `DEEPSEEK_API_KEY` | DeepSeek API 密钥 |
-| `ALI_CODING_PLAN_API_KEY` | 阿里百炼 Coding Plan API 密钥 |
 | `ANTIX_API_KEY` | Antix 企业网关 API 密钥 |
 | `MODEL_BASE_URL` | 全局基础 API 地址（可被各提供商专属变量覆盖） |
 | `ANTHROPIC_BASE_URL` | 覆盖 Anthropic API 基础地址 |
@@ -323,11 +322,11 @@ seq 1 200; printf '\033[2J\033[3J\033[H'
 | 标识符 | 来源 | 用途说明 |
 |---|---|---|
 | Run id（运行 ID） | 每个进程随机生成，绝不持久化 | 为每个并发运行的 Ante 赋予独立的指标序列（累加计数器所需）。仅在指标中作为 `service.instance.id` 导出。 |
-| Installation id（安装 ID） | 随机生成的助记短语（如 `clever-otter-x7f2`），保存在 `~/.ante/installation-id` | 用于区分“单台机器上报了 500 次错误”与“500 台机器各上报了 1 次错误”。在首次配置了遥测的启动时生成，采用单词短语格式以便在 Issue 中引用 —— `ante rage` 会包含它。该短语不编码任何关于您、主机或账号的信息。 |
+| Installation id（安装 ID） | 随机生成的助记短语（如 `clever-otter-x7f2`），保存在 `~/.ante/installation-id` | 用于区分“单台机器上报了 500 次错误”与“500 台机器各上报了 1 次错误”。在首次配置了遥测的启动时生成，采用单词短语格式以便在 Issue 中引用 —— `ante rage` 会包含它。该短语不编码任何关于您、主机或账号的信息。您可以编辑该文件将其内容更改为像 `anon` 这样的通用名称或任何您喜欢的标识。 |
 | `user.name` | `ANTE_USER`，仅显式配置 | 标识部署的运维方。CI 和评测集群可配置；个人电脑建议留空。 |
 | `user.id` | `ANTE_USER_ID`，仅显式配置 | 当名称不适用时由操作者指定的标识符。 |
 
-删除 `~/.ante/installation-id` 可重置为全新身份；若 Ante 无法读写主目录，则直接在无安装 ID 的状态下上报。通过 `ANTE_ENV` 可对数据按环境分组（默认：`local`）。
+您可以编辑 `~/.ante/installation-id` 将标识更改为如 `anon` 这样的通用名称或任何您偏好的内容，或删除 `~/.ante/installation-id` 以重置为全新身份（在下一次配置了遥测的运行中会自动重新生成）。若 Ante 无法读写主目录，则直接在无安装 ID 的状态下上报。通过 `ANTE_ENV` 可对数据按环境分组（默认：`local`）。
 
 所有通过 `RUST_LOG` 过滤规则的应用追踪记录也会一并导出。日志**正文内容（Bodies）**不会被脱敏处理，因此包含路径或工具参数的消息会如实记录 —— 请仅将 `OTEL_EXPORTER_OTLP_ENDPOINT` 指向您完全信任的收集端。
 

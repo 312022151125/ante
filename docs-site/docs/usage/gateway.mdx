@@ -8,10 +8,14 @@ Gateway mode runs Ante as a long-lived bot reachable from Slack, Discord, or bot
 ## Basic usage
 
 ```bash
+# Start an Ante host first
+ante serve --sock
+
+# In another terminal, start the gateway
 ante gateway
 ```
 
-This reads `~/.ante/channels.json`, connects to every platform you've enabled, and starts listening for messages.
+`ante gateway` connects to a running Ante host (`ante serve --sock` or via `--connect`) using the Ante SDK rather than managing an in-process runtime. It reads `~/.ante/channels.json`, connects to every platform you've enabled, and starts listening for messages.
 
 ## Configuration
 
@@ -76,7 +80,7 @@ Anytime you change scopes or event subscriptions, you must **Reinstall to Worksp
 export DISCORD_BOT_TOKEN="..."
 ```
 
-**Using the bot in Discord:** `@mention` it in a server channel, or just DM it. The bot replies as a reference to your message — reply to the bot's message to continue the conversation.
+**Using the bot in Discord:** `@mention` it in a server channel, or just DM it. The bot replies as a reference to your message — reply to the bot's message to continue the conversation (subsequent replies in the thread route back to the original conversation without requiring explicit bot re-mentions).
 
 ## Talking to the bot
 
@@ -101,19 +105,19 @@ See [Approvals](/usage/approvals) for more on tool approval flows.
 ## CLI reference
 
 ```bash
-ante gateway [--config PATH] [--model MODEL] [--provider PROVIDER] [--output-format FORMAT] [--offline-model PATH]
+ante gateway [--config PATH] [--connect ENDPOINT] [--model MODEL] [--provider PROVIDER] [--output-format FORMAT]
 ```
 
 | Flag | Default | Description |
 | --- | --- | --- |
 | `--config` | `~/.ante/channels.json` | Path to the channels config file |
-| `--model` | `local` | LLM model to use for every session |
-| `--provider` | `local` | Provider for the chosen model |
+| `--connect` | `unix:~/.ante/run/serve.sock` | Ante host endpoint: `unix:<path>`, `ws://<addr>`, `wss://<addr>`, or `stdio`. Start a host with `ante serve --sock` |
+| `--model` | — | Model to request (otherwise uses host settings) |
+| `--provider` | — | Provider to request (otherwise resolved by host) |
 | `--output-format` | `minimal` | Gateway stdout format: `minimal`, `human`, or `json` |
-| `--offline-model` | — | Path to a local GGUF file. Starts a shared `llama serve` router before accepting messages and routes every conversation through it (forces `--provider local --model local`) |
 
 :::tip
-The defaults assume a local llama.cpp server or router. To use a hosted provider, pass `--provider` and `--model` explicitly (e.g. `ante gateway --provider anthropic --model claude-sonnet-5`).
+By default, `ante gateway` connects to a local host socket at `unix:~/.ante/run/serve.sock`. To connect to a different host endpoint, pass `--connect` (e.g. `ante gateway --connect unix:/tmp/ante.sock`).
 :::
 
 ### Output formats
