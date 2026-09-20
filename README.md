@@ -223,7 +223,7 @@ Bring your own API key, subscription, or local model; no account required, not e
 We open sourced what really matters in the age of agentic coding, all under Apache 2.0:
 
 1. **Detailed documentation, the descriptive truth.** [`docs-site/`](docs-site) is the source for [docs.antigma.ai](https://docs.antigma.ai): a precise description of what the harness does and how to drive it.
-2. **The protocol and client SDKs.** [`crates/protocol-shape`](crates/protocol-shape) defines the wire messages and schema spoken by `ante serve`; [`crates/ante-sdk`](crates/ante-sdk) is the async Rust SDK for controlling Ante over stdio or Unix domain sockets; [`ante-acp`](ante-acp) provides Agent Client Protocol support.
+2. **The protocol and client SDKs.** [`crates/protocol-shape`](crates/protocol-shape) defines the wire messages and schema spoken by `ante serve`; [`crates/ante-sdk`](crates/ante-sdk) is the async Rust SDK for controlling Ante over stdio or Unix domain sockets; [`ante-acp`](ante-acp) provides Agent Client Protocol support; [`ante-gateway`](ante-gateway) connects Slack and Discord to an Ante host.
 3. **Core primitives and execution engine.** As parts of the private core stabilize, they are open-sourced here: [`crates/exec`](crates/exec) provides bounded async process execution, and [`crates/llm`](crates/llm) supplies provider profiles and shared LLM primitives.
 4. **The eval pipeline, constraint and continuous improvement.** [`ante-harbor/`](ante-harbor) is the Harbor agent adapter behind our Terminal-Bench results: use it to reproduce any run at [antigma.ai/eval](https://antigma.ai/eval). [`CHANGELOG.md`](CHANGELOG.md) records the improvement, release by release.
 
