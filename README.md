@@ -218,18 +218,21 @@ Bring your own API key, subscription, or local model; no account required, not e
 
 ## What's in this repo
 
-> **Documentation is the new source code.**
-
-We open sourced what really matters in the age of agentic coding, all under Apache 2.0:
-
-1. **Detailed documentation, the descriptive truth.** [`docs-site/`](docs-site) is the source for [docs.antigma.ai](https://docs.antigma.ai): a precise description of what the harness does and how to drive it.
-2. **The protocol and client SDKs.** [`crates/protocol-shape`](crates/protocol-shape) defines the wire messages and schema spoken by `ante serve`; [`crates/ante-sdk`](crates/ante-sdk) is the async Rust SDK for controlling Ante over stdio or Unix domain sockets; [`ante-acp`](ante-acp) provides Agent Client Protocol support; [`ante-gateway`](ante-gateway) connects Slack and Discord to an Ante host.
-3. **Core primitives and execution engine.** As parts of the private core stabilize, they are open-sourced here: [`crates/exec`](crates/exec) provides bounded async process execution, and [`crates/llm`](crates/llm) supplies provider profiles and shared LLM primitives.
-4. **The eval pipeline, constraint and continuous improvement.** [`ante-harbor/`](ante-harbor) is the Harbor agent adapter behind our Terminal-Bench results: use it to reproduce any run at [antigma.ai/eval](https://antigma.ai/eval). [`CHANGELOG.md`](CHANGELOG.md) records the improvement, release by release.
-
-Alongside these, [`curated/`](curated) is a shared space for reusable pieces from the team and community, laid out to mirror `~/.ante/`: settings profiles like [`pi`](curated/pi.settings.json) and [`plan`](curated/plan.settings.json), and skills.
-
-The core harness itself is developed in a private repository during the alpha and ships as a prebuilt binary via [releases](https://github.com/AntigmaLabs/ante/releases). Core libraries from it continue to be extracted here as they stabilize; progress is tracked in [issue #21](https://github.com/AntigmaLabs/ante/issues/21).
+- **Applications:**
+  - [`ante-acp`](ante-acp) — [Agent Client Protocol](https://agentclientprotocol.com) server driving Ante from editors like Zed and JetBrains IDEs.
+  - [`ante-gateway`](ante-gateway) — Slack and Discord gateway for Ante.
+- **Protocol & SDKs:**
+  - [`crates/protocol-shape`](crates/protocol-shape) — Wire message schema spoken by `ante serve`.
+  - [`crates/ante-sdk`](crates/ante-sdk) — Async Rust SDK for controlling Ante over stdio or Unix domain sockets.
+- **Core Primitives:**
+  - [`crates/exec`](crates/exec) — Bounded async process execution.
+  - [`crates/llm`](crates/llm) — LLM provider profiles and shared primitives.
+- **Evaluation:**
+  - [`ante-harbor/`](ante-harbor) — Harbor agent adapter behind our [Terminal-Bench results](https://antigma.ai/eval).
+- **Profiles & Docs:**
+  - [`curated/`](curated) — Reusable settings profiles (such as [`pi`](curated/pi.settings.json) and [`plan`](curated/plan.settings.json)) and skills.
+  - [`docs-site/`](docs-site) — Source for [docs.antigma.ai](https://docs.antigma.ai).
+  - [`examples/`](examples) — Example integrations and custom harness implementations.
 
 The protocol surface maps to Ante's client-daemon architecture:
 
@@ -322,7 +325,5 @@ Source code in this repository (including the SDK and protocol crates) is
 licensed under the [Apache License 2.0](LICENSE).
 
 The prebuilt `ante` binary is free to use — including commercially — during
-the alpha preview under the [Binary Preview Terms](BINARY-TERMS.md). The core
-harness is currently developed in a private repository and shipped as a
-binary; the SDK and protocol surface you build against here will remain
-permissively licensed.
+the alpha preview under the [Binary Preview Terms](BINARY-TERMS.md). The SDK
+and protocol surface you build against here remain permissively licensed.
