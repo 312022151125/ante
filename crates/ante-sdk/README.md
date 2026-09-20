@@ -26,5 +26,3 @@ the opt-in `wss` feature.
 A process that hosts sessions itself obtains the same `Client` type from its
 host directly; the in-process channel carries the same wire types the remote
 codecs serialize.
-
-The `claude` module is unrelated: it drives Claude Code as a child process.

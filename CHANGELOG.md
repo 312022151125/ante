@@ -1,5 +1,36 @@
 # Changelog
 
+## v0.2.2 - 2026-09-20
+
+### Added
+- `max_concurrent_subagents` setting in `settings.json` to cap parallel Agent calls
+- NVIDIA Nemotron (3.5 Lightning, 3 Ultra) and OpenRouter models (GPT-6 Astra, Astra Pro, Qwen 3.8 Flash)
+- Ctrl+Shift+V shortcut for clipboard image paste in the composer
+- Show Bash descriptions as headlines with command preview and elapsed time
+
+### Changed
+- `ante gateway` delegates to the external `ante-gateway` executable
+- `ante rage` excludes gateway channel configuration
+- TUI architecture and rendering refactors: ChatState state ownership, pure pager frames, first-fit text wrapping, and unified row types
+- Show shell commands immediately upon invocation
+- Stable TUI spinner with delayed elapsed time display
+- Diff views omit unchanged-line indicator rows
+- Refined task completion, delegation, and length guidance in system prompts
+- Model catalog cleanup: removed obsolete DeepSeek Flash and OpenRouter Opus routes
+
+### Fixed
+- Session resume re-renders the complete event log instead of capping at 200 events
+- User image and PDF attachments are preserved in Responses wire serialization
+- Queued messages return to the composer when replacing a session
+- Strip ANSI escapes from external tool and shell output to avoid wrap clipping
+- Soft-wrapped notices and shell output rejoin properly when copied
+
+### Removed
+- Removed `ante_sdk::claude` and legacy child-process stdio transport; host stdio connections remain supported via `connect(Endpoint::Stdio, options)`
+
+### Crates
+- Public crates published as 0.2.2: ante-protocol-shape, ante-llm, ante-exec, ante-sdk
+
 ## v0.2.1 - 2026-09-19
 
 ### Added
