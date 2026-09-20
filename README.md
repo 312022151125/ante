@@ -234,6 +234,22 @@ Bring your own API key, subscription, or local model; no account required, not e
   - [`docs-site/`](docs-site) — Source for [docs.antigma.ai](https://docs.antigma.ai).
   - [`examples/`](examples) — Example integrations and custom harness implementations.
 
+### Building applications from source
+
+Build and install either application with Cargo:
+
+```sh
+cargo install --path ante-acp
+cargo install --path ante-gateway
+```
+
+Once installed on `PATH`, they can be invoked directly (`ante-acp`, `ante-gateway`) or dispatched via `ante`:
+
+```sh
+ante acp       # runs ante-acp
+ante gateway   # runs ante-gateway
+```
+
 The protocol surface maps to Ante's client-daemon architecture:
 
 ```

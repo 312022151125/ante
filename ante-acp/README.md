@@ -25,11 +25,20 @@ Not yet:
   so the model decides on its own instead of asking you to choose.
 - MCP servers and additional directories passed by the client are ignored.
 
-## Run
+## Build from source & Run
+
+Build and install `ante-acp`:
 
 ```bash
 cargo install --path ante-acp
+```
+
+Once installed, it can be invoked via `ante` or directly:
+
+```bash
 ante acp   # dispatches to ante-acp with ANTE pointing at that ante binary
+# or
+ante-acp
 ```
 
 Launched directly, `ante-acp` uses `--executable <PATH>`, else `ante` on `PATH`.
