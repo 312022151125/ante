@@ -124,7 +124,7 @@ ante serve [OPTIONS]
 :::
 
 :::caution
-`--ws` 仅接受本地回环地址（`127.0.0.0/8`、`::1`）。非回环地址（如 `0.0.0.0:8080`）会在绑定前被直接拒绝 —— 由于该协议未设身份认证，暴露给外部网络将赋予接入方在机器上执行任意工具的完全权限。若需远程连接，请使用 SSH 隧道或带身份验证的反向代理。
+`--ws` 要求设置非空的 `ANTE_SERVE_TOKEN`，且仅接受本地回环地址（`127.0.0.0/8`、`::1`）。客户端必须在 WebSocket 升级请求中发送 `Authorization: Bearer <token>`；缺少或错误的令牌会返回 HTTP 401，握手超时为 10 秒。非回环地址（如 `0.0.0.0:8080`）会在绑定前被拒绝。远程连接请使用 SSH 隧道，或提供 TLS（`wss://`）与身份验证的反向代理。
 :::
 
 :::note
@@ -139,7 +139,7 @@ ante serve [OPTIONS]
 ante serve
 ante serve --sock                        # ~/.ante/run/serve.sock
 ante serve --sock /tmp/ante.sock
-ante serve --ws 127.0.0.1:8080
+ANTE_SERVE_TOKEN="your-secret-token" ante serve --ws 127.0.0.1:8080
 ```
 
 ## `ante gateway` {#ante-gateway}
@@ -148,7 +148,7 @@ ante serve --ws 127.0.0.1:8080
 ante gateway [OPTIONS]
 ```
 
-网关模式根据渠道配置文件将 Ante 接入 Slack、Discord 或两者。它通过 SDK 连接到正在运行的 Ante 宿主，而非在进程内管理运行时。
+从 v0.2.2 起，此命令分派给单独安装的 `ante-gateway` 程序，后续参数原样传递。它通过 SDK 连接 Ante 宿主，并按 channels 配置接入 Slack 和 Discord。安装方法参阅[网关模式](/usage/gateway#basic-usage)；未安装时以状态码 `127` 退出。
 
 | 参数标识 | 默认值 | 说明 |
 |---|---|---|
@@ -183,7 +183,7 @@ ante update [OPTIONS] [CHANNEL]
 | 参数标识 | 说明 |
 |---|---|
 | `--channel <CHANNEL>` | 更新追踪的发布通道。等同于位置参数形式。 |
-| `--version <VERSION>` | 安装指定的具体发布版本而非通道最新版。支持带或不带前缀 `v`（如 `v0.2.1` 或 `0.2.1`）。与通道参数互斥。 |
+| `--version <VERSION>` | 安装指定的具体发布版本而非通道最新版。支持带或不带前缀 `v`（如 `v0.2.2` 或 `0.2.2`）。与通道参数互斥。 |
 | `-h`, `--help` | 打印帮助信息。 |
 
 ### 使用示例 {#ante-update-examples}
@@ -192,7 +192,7 @@ ante update [OPTIONS] [CHANNEL]
 ante update
 ante update nightly
 ante update --channel stable
-ante update --version v0.2.1
+ante update --version v0.2.2
 ```
 
 ## `ante offline` {#ante-offline}
@@ -223,6 +223,8 @@ ante rage [OPTIONS]
 
 发生故障时，`ante rage` 会收集排查所需的上下文信息并打包为一个脱敏归档，便于附加到 GitHub Issue。默认生成 `./ante-rage-<timestamp>.tar.gz` 并打印简要总结。不会自动上传任何数据 —— 归档始终保存在本地。
 
+使用 `--no-compress` 时，完整报告写入 `./ante-rage-<timestamp>` 目录，或 `--output` 指定的精确路径。两种格式均拒绝覆盖已有输出，且父目录必须已经存在。压缩失败时，会在归档路径后追加 `.uncompressed`，将报告保存为该目录。
+
 所有敏感信息在写入前均会脱敏处理。API 密钥和 OAuth Token 仅记录存在状态（`<SET>` / `<UNSET>`），URL 中的凭据被掩码，对话记录与系统提示词被排除，且 `~/.ante/auth/*.json` 与 `channels.json` 绝不会被打包。
 
 归档包含：
@@ -241,8 +243,8 @@ ante rage [OPTIONS]
 
 | 参数标识 | 说明 |
 |---|---|
-| `--output <PATH>` | 将归档包写入指定路径而非默认文件名。 |
-| `--no-compress` | 生成未压缩的暂存目录而非 `.tar.gz`。 |
+| `--output <PATH>` | 精确输出路径：默认写入归档，配合 `--no-compress` 则写入报告目录。默认路径分别为 `./ante-rage-<timestamp>.tar.gz` 与 `./ante-rage-<timestamp>`。 |
+| `--no-compress` | 将完整报告写入目录，而非生成 `.tar.gz`。 |
 | `--verbose-logs` | 同时包含 `DEBUG`/`TRACE` 日志行（对话记录与系统提示词仍被排除）。 |
 | `--since <DURATION>` | 收集指定时间窗口内的所有日志，忽略文件数量与大小限制（如 `7d`、`48h`、`90m`、`2`）。 |
 | `-h`, `--help` | 打印帮助信息。 |

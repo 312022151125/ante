@@ -41,6 +41,8 @@ Ante persists configuration and state on the local filesystem. This page is a re
 
 `<project-id>` is a sanitized form of the project's absolute path. The `ANTE_HOME` environment variable overrides `~/.ante`.
 
+WebFetch spill files use the OS cache directory: `~/Library/Caches/ante` on macOS, `$XDG_CACHE_HOME/ante` on Linux (falling back to `~/.cache/ante` when unset or not absolute), and `%LOCALAPPDATA%/ante` on Windows. Only when the OS cache directory cannot be resolved does Ante fall back to `$ANTE_HOME/cache`; changing `ANTE_HOME` normally does not move the cache. Cache entries older than 48 hours are collected on a later startup. Disposable staging files and intermediate downloads use the OS temp directory and are outside this 48-hour cache sweep.
+
 Background job directories are live process state rather than scratch data. Ante never removes a live job because of age; after a job settles, its directory is retained for 24 hours and then collected on a later startup.
 
 ## `settings.json`
@@ -136,13 +138,11 @@ See [AGENTS.md](/extend/agents-md) for usage guidance and precedence details.
 │   └── <project-id>/
 │       └── memory/
 │           └── MEMORY.md
-├── cache/              # WebFetch spills (48-hour scratch)
 ├── run/
 │   ├── jobs/
 │   │   └── <proc-id>/  # Background Bash status and output
 │   ├── serve.sock      # `ante serve --sock` listener
 │   └── serve.sock.lock # Ownership lock for the socket above
-├── tmp/                # Disposable staging (48-hour scratch)
 ├── logs/
 │   ├── <YYYY-MM-DD>/   # ante.<pid>.log and crash logs
 │   └── llama-server.log

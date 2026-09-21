@@ -67,15 +67,15 @@ flowchart LR
 
 ## 大语言模型提供商 {#llm-providers}
 
-Ante 具备跨提供商无关性。每个提供商均实现了发送提示词与接收响应的通用接口。流式传输过程中的偶发网络闪断会在轮次内自动重连；流式调用若 5 分钟内没有可用事件、缓冲调用若 5 分钟内未完成，都会因超时报错而非无限挂起。该超时窗口支持按提供商配置 —— 可通过 [`stream_idle_timeout_secs`](/reference/catalog-reference#provider-fields) 覆盖。
+Ante 具备跨提供商无关性。每个提供商均实现了发送提示词与接收响应的通用接口。流式传输过程中的偶发网络闪断会在轮次内自动重连；流式调用在传输层连续 5 分钟没有收到任何数据时超时；任何读取（包括保活事件和部分工具参数）都会重置计时。缓冲调用则必须在超时窗口内完成。该超时窗口支持按提供商配置 —— 可通过 [`stream_idle_timeout_secs`](/reference/catalog-reference#provider-fields) 覆盖。
 
 | 提供商 | 通信协议格式 (Wire Format) | 支持模型 |
 |---|---|---|
 | Anthropic | Messages API | Claude 4.5 与 5 家族 |
 | Anthropic Subscription | Messages API | Claude 家族（OAuth） |
-| OpenAI | Responses API | GPT-5 家族 |
+| OpenAI | Responses API | GPT-6 Astra 与 GPT-5 模型 |
 | OpenAI Compatible | Chat Completions | 自定义模型 |
-| OpenAI Subscription | Responses API | GPT-5 家族（通过 Codex OAuth） |
+| OpenAI Subscription | Responses API | GPT-6 Astra 与 GPT-5.6（通过 Codex OAuth） |
 | Gemini | Gemini API | Gemini 3.x 家族 |
 | Vertex AI Gemini | Gemini API | Gemini 3.x 家族 |
 | Grok (xAI) | Responses API | Grok 4.6 |
@@ -118,6 +118,7 @@ pub trait Tool: Send + Sync {
 | `Grep` | 文件 I/O | 否 | 使用正则表达式搜索文件内容 |
 | `Bash` | Shell | 是 | 执行 Shell 命令；当命令超出 `max_wait_ms` 窗口时返回持久句柄 |
 | `Agent` | 内置核心 | 否 | 派生子智能体处理复杂任务 |
+| `AskUser` | 内置核心 | 否 | 提出结构化问题；有人值守时暂停会话以等待回答 |
 | `TodoWrite` | 内置核心 | 否 | 维护任务进度清单（可选工具） |
 | `WebFetch` | 内置核心 | 是 | 获取并处理网页内容 |
 | `WebSearch` | 内置核心 | 是 | 检索互联网（在支持网络搜索的提供商上自动启用） |

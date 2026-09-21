@@ -93,7 +93,6 @@ const sidebars: SidebarsConfig = {
       items: [
         'configuration/preference',
         'configuration/permission',
-        'configuration/coding-plan',
       ],
     },
     {

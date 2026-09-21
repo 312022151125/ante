@@ -35,8 +35,10 @@ ante --permission-mode auto "update docs and run tests"
 
 In the TUI, press **Shift+Tab** to cycle the mode live: `strict` → `auto` → `yolo` → `strict`. The change applies immediately, including to later tool calls in a turn that is already running. Cycling to `strict` or `auto` also saves that mode as the default in `~/.ante/settings.json`; cycling to `yolo` is session-only, so future sessions do not silently start with permission checks off.
 
+Resuming a session uses the current permission settings. A saved Yolo mode cannot override your current Strict or Auto mode; legacy snapshots still load, but their saved permission mode is ignored.
+
 :::warning
-In headless mode, `yolo` mode is implied — all tools are auto-approved since there is no interactive prompt.
+Headless runs default to `yolo`. An explicit `--permission-mode strict` or `--permission-mode auto` is honored; because headless sessions are unattended, calls that would require approval are denied immediately instead of waiting for a prompt. See [Headless mode](/usage/headless).
 :::
 
 ## Decisions

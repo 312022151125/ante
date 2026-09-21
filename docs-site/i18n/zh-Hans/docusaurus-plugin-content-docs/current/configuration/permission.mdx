@@ -36,8 +36,10 @@ ante --permission-mode auto "update docs and run tests"
 
 在 TUI 中，按 **Shift+Tab** 可实时循环切换模式：`strict` → `auto` → `yolo` → `strict`。变动立即生效，适用于当前正在运行轮次中的后续工具调用。切换到 `strict` 或 `auto` 还会自动将其保存为 `~/.ante/settings.json` 的全局默认值；切换到 `yolo` 仅对当前会话生效，确保未来的新会话不会在无保护状态下静默启动。
 
+恢复会话时使用当前权限设置。历史保存的 Yolo 模式不会覆盖当前的 Strict 或 Auto 模式；旧版快照仍可加载，但其中保存的权限模式会被忽略。
+
 :::warning
-在无头模式（Headless Mode）下，默认隐式使用 `yolo` 模式 —— 由于没有交互式提示，所有工具调用均会自动放行。
+无头模式默认使用 `yolo`，但会遵从显式的 `--permission-mode strict` 或 `--permission-mode auto`。由于无头会话无人值守，原本需要审批的调用会被立即拒绝，而不会等待交互提示。参阅[无头模式](/usage/headless)。
 :::
 
 ## 判定结果 {#decisions}

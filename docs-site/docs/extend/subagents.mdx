@@ -84,6 +84,16 @@ Token and cache usage from a sub-agent is forwarded into the parent session's to
 └────────────┘    Result     └──────────────┘
 ```
 
+### Concurrency limit
+
+Set `max_concurrent_subagents` in `~/.ante/settings.json`, a named profile, or [project settings](/configuration/preference#project-settings) to cap running subagents per session. For example, for a local model that handles one request at a time:
+
+```json
+{ "max_concurrent_subagents": 1 }
+```
+
+Omitted, `null`, or `0` means unlimited. Calls beyond the cap report `waiting for a subagent slot` and wait before opening a model stream, so queue time does not consume the provider idle timeout. Interrupting the parent turn cancels the wait. The setting is read when a session starts or resumes; it has no CLI flag or `SessionRequest` field.
+
 ## Discovery
 
 Sub-agents are discovered in precedence order (later overrides earlier by name):

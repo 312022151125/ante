@@ -55,7 +55,7 @@ For interactive programs and persistent shells, the agent drives durable named t
 
 ### Agent
 
-Spawn a sub-agent to handle a task autonomously. The agent picks which sub-agent to delegate to based on the task, and can optionally specify a per-call `model` parameter to override the subtask's model (falling back to the agent definition or current session model).
+Spawn a sub-agent to handle a task autonomously. The agent picks which sub-agent to delegate to based on the task, and can optionally specify a per-call `model` parameter to override the subtask's model (falling back to the agent definition or current session model). Use the [`max_concurrent_subagents`](/extend/subagents#concurrency-limit) setting to cap parallel calls; further calls wait for a slot.
 
 ### AskUser
 

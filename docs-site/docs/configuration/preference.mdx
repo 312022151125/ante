@@ -83,7 +83,7 @@ An example `settings.json`:
 | `tips` | Whether the TUI shows a [tip line](/usage/tui#spinner-tips) under the spinner while the agent works. On unless set to `false` |
 | `group_tool_activity` | Collapse contiguous quiet tool calls into a single activity summary in the chat. On unless set to `false`; full per-call details remain in the **Ctrl+O** transcript. Changes apply to new tool activity only |
 | `short_prompt` | Use the compact prompt set — a condensed system prompt and shorter built-in tool descriptions — for new and resumed sessions. Off unless set to `true`; the `--short-prompt` CLI flag enables it for a single run |
-| `max_concurrent_subagents` | Cap on how many subagents a session runs at once. When the model spawns more `Agent` calls than this in one message, the extra calls wait for a slot (the TUI shows `waiting for a subagent slot`) instead of starting immediately, and the `Agent` tool description tells the model about the cap. Unset or `0` means no cap. Set it to `1` for a local model that serves one request at a time, so queued subagents don't sit in the server's queue until [`stream_idle_timeout_secs`](/reference/catalog-reference#provider-fields) fires |
+| `max_concurrent_subagents` | Cap on how many subagents a session runs at once. When the model spawns more `Agent` calls than this in one message, the extra calls wait for a slot (the TUI shows `waiting for a subagent slot`) instead of starting immediately, and the `Agent` tool description tells the model about the cap. Unset, `null`, or `0` means no cap. Set it to `1` for a local model that serves one request at a time, so queued subagents don't sit in the server's queue until [`stream_idle_timeout_secs`](/reference/catalog-reference#provider-fields) fires. Settings-only, applied when starting or resuming a session; see [Concurrency limit](/extend/subagents#concurrency-limit) |
 | `auto_compact` | Proactively reduce older history as the dialog nears the context limit: aged tool results are evicted first, then only the older prefix the model will no longer see is summarized. Manual `/compact` targets a tighter working set than this automatic path. On unless set to `false`; `/compact` and overflow recovery still work when disabled. Toggling it in `/config` applies to the running session |
 | `channel` | Release channel `ante update` tracks (`stable` or `nightly`). Defaults to `stable`; legacy `latest` values are treated as `stable`. See [Update & Channels](/start/update). |
 | `resize_reflow` | Scrollback strategy on terminal resize: `conservative` (default) or `purge` (see below) |
@@ -348,10 +348,8 @@ All application tracing records that pass the active `RUST_LOG` filter are expor
 ├── installation-id    # Random telemetry installation label
 ├── sessions/          # Persisted sessions (for /resume)
 ├── projects/          # Per-project auto-memory
-├── cache/             # WebFetch spill files (48-hour scratch)
 ├── run/jobs/          # Background Bash status and output
 ├── run/serve.sock     # Unix socket for `ante serve --sock` (with a .lock sibling)
-├── tmp/               # Disposable staging (48-hour scratch)
 ├── logs/              # Application logs partitioned by UTC date
 ├── skills/            # User-level skills
 └── agents/            # User-level sub-agents
@@ -394,7 +392,7 @@ Project-scoped auto-memory lives under `~/.ante/projects/<project-id>/`, where `
 
 ### Runtime and temporary files
 
-Oversized WebFetch responses spill into `~/.ante/cache/`, while disposable staging uses `~/.ante/tmp/`; entries in both scratch tiers are removed at startup after 48 hours. Background Bash handles live under `~/.ante/run/jobs/<proc-id>/` and are retained while their process is live, then for 24 hours after it settles. Application logs live under `~/.ante/logs/<YYYY-MM-DD>/`, partitioned by UTC date.
+Oversized WebFetch responses spill into the [OS cache directory](/reference/storage-reference#locations), where entries older than 48 hours are collected on a later startup. Disposable staging files and intermediate downloads use the OS temp directory, outside that cache sweep. Changing `ANTE_HOME` normally moves neither location. Background Bash handles live under `~/.ante/run/jobs/<proc-id>/` and are retained while their process is live, then for 24 hours after it settles. Application logs live under `~/.ante/logs/<YYYY-MM-DD>/`, partitioned by UTC date.
 
 See [Storage Reference](/reference/storage-reference) for the complete layout and file purposes.
 

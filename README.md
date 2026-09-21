@@ -128,7 +128,7 @@ curl -fsSL https://ante.run/install.sh | ANTE_INSTALL_DIR=/usr/local/bin bash
 | [Interactive TUI](https://docs.antigma.ai/usage/tui) | `ante` | day-to-day work in the terminal (`--fullscreen` for alternate screen) |
 | [Headless](https://docs.antigma.ai/usage/headless) | `ante -p "..."` | one-shot tasks, scripts, CI |
 | [Server](https://docs.antigma.ai/usage/serve) | `ante serve` | editor plugins and integrations, over stdio, socket (`--sock`), or WebSocket |
-| [Gateway](https://docs.antigma.ai/usage/gateway) | `ante gateway` | running Ante as a Slack or Discord bot |
+| [Gateway](https://docs.antigma.ai/usage/gateway) | `ante gateway` | running Ante as a Slack or Discord bot (requires `ante-gateway`) |
 
 ### Headless examples
 
@@ -159,14 +159,14 @@ ante update
 ante update --channel nightly
 
 # Roll back or pin to an exact release
-ante update --version v0.2.1
+ante update --version v0.2.2
 ```
 
 ## One binary, many agents
 
 Ante's behavior lives in a settings file, and `--profile <name>` swaps that file per run: system prompt, tool set, skills, memory. The same binary can be a full assistant in one terminal and a minimal agent in the next.
 
-For project-specific workflows, Ante also respects `.ante/settings.json` at your repository root, layering team settings (such as enabled MCP servers, allowed tools, and default models) right alongside user preferences.
+For project-specific workflows, Ante loads `.ante/settings.json` from the nearest ancestor of the session directory, layering tool and skill filters, reasoning effort, and other supported session settings over user preferences. Project settings cannot change the provider or model, add MCP servers, or widen permissions.
 
 Curated profiles demonstrate how flexible this is:
 - [`pi`](curated/pi.settings.json): Strips Ante down to four tools (Read, Write, Edit, Bash) and a [short replacement system prompt](curated/pi.system-prompt.md); file search runs through `rg`, subagents through `ante -p "<task>"`, web access through `curl`.
@@ -185,18 +185,18 @@ A profile replaces the whole settings file, so anything it omits falls back to A
 
 Bring your own API key, subscription, or local model; no account required, not even with us. Provider support comes in two layers.
 
-**Built-in presets we maintain.** 17 presets, each tested and kept current, so the per-provider quirks are already handled: wire dialect, API key and OAuth flows, thinking and streaming behavior.
+**Built-in presets we maintain.** 15 hosted-provider presets plus the local provider, with per-provider quirks handled: wire dialect, API key and OAuth flows, thinking and streaming behavior.
 
 | Provider | Example Models |
 |----------|---------------|
 | Anthropic | Claude Sonnet 5, Opus 5, Fable 5.1 (API key or subscription OAuth) |
-| OpenAI | GPT-6 Astra and the GPT-5.6 family (API key; GPT-5.6 also via ChatGPT/Codex OAuth) |
+| OpenAI | GPT-6 Astra and the GPT-5.6 family (API key or ChatGPT/Codex OAuth) |
 | Google Gemini | Gemini 3.x family (Gemini API or Vertex AI) |
-| Grok (xAI) | Grok 4.5 |
+| Grok (xAI) | Grok 4.6 |
 | DeepSeek | DeepSeek V4.1 Flash |
 | Open Router | Any Open Router model, over three wire styles |
 | Local (GGUF) | Any GGUF model via built-in llama.cpp |
-| ...and more | Zai, Ali Coding Plan, Antix, OpenAI-compatible |
+| ...and more | Zai, Antix, OpenAI-compatible |
 
 **A config layer for everything else.** Your own proxy, gateway, or inference engine is one entry in `~/.ante/catalog.json`: a `wire_style` (Ante speaks four API dialects), an auth style (bearer, header, or query, from an env var or OAuth), plus `http_headers` and `extra_body` for whatever else the endpoint expects. The combinations cover most setups without a plugin or a code change:
 

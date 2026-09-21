@@ -67,15 +67,15 @@ In this direction, `Session` remains important, but as a container for user inte
 
 ## LLM providers
 
-Ante is provider-agnostic. Each provider implements a common interface for sending prompts and receiving responses. Transient mid-stream failures reconnect within the turn. Streaming calls that produce no usable event and buffered calls that do not finish within five minutes fail with a timeout instead of hanging indefinitely. That window is per provider — override it with [`stream_idle_timeout_secs`](/reference/catalog-reference#provider-fields).
+Ante is provider-agnostic. Each provider implements a common interface for sending prompts and receiving responses. Transient mid-stream failures reconnect within the turn. Streaming calls fail after five minutes of transport silence; any transport read, including keepalives and partial tool arguments, resets that timer. Buffered calls must finish within the timeout. That window is per provider — override it with [`stream_idle_timeout_secs`](/reference/catalog-reference#provider-fields).
 
 | Provider | Wire Format | Models |
 |---|---|---|
 | Anthropic | Messages API | Claude 4.5 and 5 families |
 | Anthropic Subscription | Messages API | Claude family (OAuth) |
-| OpenAI | Responses API | GPT-5 family |
+| OpenAI | Responses API | GPT-6 Astra and GPT-5 models |
 | OpenAI Compatible | Chat Completions | Custom models |
-| OpenAI Subscription | Responses API | GPT-5 family (OAuth via Codex) |
+| OpenAI Subscription | Responses API | GPT-6 Astra and GPT-5.6 (OAuth via Codex) |
 | Gemini | Gemini API | Gemini 3.x family |
 | Vertex AI Gemini | Gemini API | Gemini 3.x family |
 | Grok (xAI) | Responses API | Grok 4.6 |
@@ -118,6 +118,7 @@ pub trait Tool: Send + Sync {
 | `Grep` | File I/O | No | Search file contents with regex |
 | `Bash` | Shell | Yes | Execute shell commands; returns a durable handle when a command outlives its `max_wait_ms` window |
 | `Agent` | Builtin | No | Spawn sub-agent for complex tasks |
+| `AskUser` | Builtin | No | Ask structured questions; pauses attended sessions for an answer |
 | `TodoWrite` | Builtin | No | Manage task lists (opt-in) |
 | `WebFetch` | Builtin | Yes | Fetch and process web content |
 | `WebSearch` | Builtin | Yes | Search the web (auto-enabled on web-search-capable providers) |

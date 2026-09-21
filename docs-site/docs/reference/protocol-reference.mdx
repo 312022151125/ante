@@ -137,7 +137,9 @@ Update the active session without restarting it (e.g. switch models or permissio
 
 ### ResumeSession
 
-Resume a previously persisted session by its ID. The daemon restores the saved dialog and pinned model, provider, and effort, resolves anything the snapshot did not pin from the host's current defaults, re-discovers extensions, and replays recent events so the client can rebuild its view.
+Resume a previously persisted session by its ID. The daemon restores the saved dialog and pinned model, provider, and effort, resolves anything the snapshot did not pin from the host's current defaults, re-discovers extensions, and replays the complete persisted conversation so the client can rebuild its view.
+
+Permission mode always resolves from the host's current settings. Older snapshots still load, but their saved permission mode is ignored and omitted on the next save.
 
 ```json
 { "op": { "ResumeSession": { "session_id": "ses_01ARZ...", "unattended": false } }, "id": "op_..." }
@@ -148,7 +150,7 @@ Resume a previously persisted session by its ID. The daemon restores the saved d
 | `session_id` | `Id` | The session identifier to resume |
 | `unattended` | `bool` | Whether no client can answer approval prompts for this resumed incarnation. Defaults to `false` when absent; when `true`, would-be prompts are denied at admission |
 
-On success the daemon emits `SessionEnd` for the current session (if any), then `SessionStart` and `ExtensionRefreshed` for the resumed session, followed by up to 200 replayed historical events. On failure it emits an `Error` event.
+On success the daemon emits `SessionEnd` for the current session (if any), then `SessionStart` and `ExtensionRefreshed` for the resumed session, followed by the complete persisted event log in order, excluding session lifecycle events and malformed lines. There is no 200-event cap. On failure it emits an `Error` event.
 
 ### Steer
 
@@ -240,6 +242,15 @@ Resolve a pending question pause (`TurnPauseReason::Question`). Sent after the u
 | `turn_id` | `Id` | The paused turn's identifier |
 | `tool_use_id` | `string` | Tool call identifier matching the pause |
 | `reply` | `QuestionReply` | `Answered(QuestionAnswer[])`, `Dismissed`, or `Discuss { message? }` |
+
+The `Answered` array corresponds to `TurnPause.reason.Question.questions` in question order. Each `QuestionAnswer` contains:
+
+| Field | Type | Description |
+|---|---|---|
+| `selected` | `string[]` | Exact labels of selected options, not indices; empty for a free-text-only answer |
+| `note` | `string?` | Additional text, or the answer itself when `selected` is empty; omit when no text was entered |
+
+An empty selection with no note leaves that question unanswered. To skip the whole prompt, send `"reply": "Dismissed"`. To discuss it, send `"reply": { "Discuss": { "message": "Explain the options first" } }`; `Discuss.message` is optional.
 
 ### SlashCommand
 
@@ -472,6 +483,17 @@ Emitted when a turn is paused waiting for user input (e.g. tool approval).
 |---|---|---|
 | `Approval` | `tools: ToolUse[]`, `message: string` | Waiting for tool approval |
 | `Question` | `tool_use_id: string`, `questions: QuestionSpec[]` | Waiting for user response to structured questions from `AskUser` |
+
+**QuestionSpec fields:**
+
+| Field | Type | Description |
+|---|---|---|
+| `header` | `string` | Short label for the question |
+| `question` | `string` | Full question text |
+| `multi_select` | `bool` | Whether multiple options may be selected; defaults to `false`. The wire field is `multi_select`, while the tool input uses `multiSelect` |
+| `options` | `QuestionOption[]` | Offered choices; the client adds its own free-text "Other" input |
+
+Each `QuestionOption` has `label` and `description` strings, plus an optional `preview` string for a code snippet, mockup, or config excerpt. Other tools in the batch may keep running during a question pause. Keep consuming events and clear any pending question on `TurnResume` or `TurnEnd`.
 
 #### TurnResume
 

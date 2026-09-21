@@ -9,6 +9,8 @@ This page is the exhaustive reference. For how to pick a provider day to day and
 
 ## Built-in providers
 
+The presets below match **v0.2.2**: 15 hosted-provider presets, plus `local` when an offline server is running.
+
 | Provider | key | Wire style | Authentication |
 |---|---|---|---|
 | Anthropic | `anthropic` | `AnthropicMessage` | `ANTHROPIC_API_KEY` |
@@ -24,7 +26,6 @@ This page is the exhaustive reference. For how to pick a provider day to day and
 | Grok (xAI) | `xai` | `OpenAiResponse` | `XAI_API_KEY` |
 | Zai | `zai` | `OpenAiCompatible` | `ZAI_API_KEY` |
 | DeepSeek | `deepseek` | `OpenAiCompatible` | `DEEPSEEK_API_KEY` |
-| Ali Coding Plan | `ali-coding-plan` | `AnthropicMessage` | `ALI_CODING_PLAN_API_KEY` |
 | Antix | `antix` | `AnthropicMessage` | OAuth |
 | Antix (API key) | `antix-api-key` | `AnthropicMessage` | `ANTIX_API_KEY` |
 | Local | `local` | `OpenAiCompatible` | none |
@@ -68,7 +69,7 @@ ante --provider anthropic --model claude-sonnet-5
 ante --provider openai --model gpt-5.6-sol
 ```
 
-The `openai-subscription` provider (ChatGPT/Codex OAuth) serves `gpt-5.6-sol`, `gpt-5.6-terra`, and `gpt-5.6-luna` with 272K context, plus `gpt-5.5`, `gpt-5.4`, and `gpt-5.4-mini` with 400K context.
+The `openai-subscription` provider (ChatGPT/Codex OAuth) offers `gpt-6-astra` (the default), `gpt-5.6-sol`, `gpt-5.6-terra`, and `gpt-5.6-luna`, all with 272K context and image input. GPT-5.5, GPT-5.4, and GPT-5.4 Mini are no longer in the subscription picker.
 
 #### OpenAI transports
 
@@ -107,14 +108,10 @@ Notes:
 | Model | Description | Context |
 |---|---|---|
 | `gemini-3.8-flash` | Gemini 3.8 Flash for long-horizon coding and autonomous agents | 1.05M |
-| `gemini-3.7-flash` | Gemini 3.7 Flash for fast agentic and multimodal workflows | 1.05M |
-| `gemini-3.6-flash` | Gemini 3.6 Flash for agentic and multimodal workflows | 1M |
-| `gemini-3.1-pro-preview` | Gemini 3.1 Pro with deep thinking | 1M |
-| `gemini-3.1-pro-preview-customtools` | Gemini 3.1 Pro optimized for custom tool usage | 1M |
 | `gemini-3.5-flash-lite` | Fastest, lowest-cost Gemini 3.5 model for high-throughput work | 1M |
 
 ```bash
-ante --provider gemini --model gemini-3.1-pro-preview
+ante --provider gemini --model gemini-3.8-flash
 ```
 
 ### Grok (xAI)
@@ -148,10 +145,10 @@ Open Router ships as three providers sharing one API key, split by wire style: `
 |---|---|---|
 | `deepseek/deepseek-v4-flash-0731` | DeepSeek V4 Flash 0731 | 1.05M |
 | `google/gemini-3.8-flash` | Gemini 3.8 Flash for long-horizon coding and autonomous agents | 1.05M |
-| `google/gemini-3.7-flash` | Gemini 3.7 Flash for fast multimodal agentic workflows | 1.05M |
 | `x-ai/grok-4.6` | Grok 4.6 flagship reasoning model via OpenRouter | 500K |
-| `qwen/qwen3.8-max` | Qwen 3.8 flagship multimodal reasoning model | 1M |
+| `qwen/qwen3.8-max-0902` | Qwen 3.8 flagship multimodal reasoning model | 1M |
 | `qwen/qwen3.7-plus` | Cost-effective Qwen 3.7 model with vision | 1M |
+| `qwen/qwen3.8-flash` | Qwen 3.8 Flash multimodal reasoning model | 1M |
 | `qwen/qwen3.7-flash` | Low-cost Qwen 3.7 multimodal reasoning model | 1M |
 | `meta/muse-spark-1.3` | Muse Spark 1.3 multimodal agentic reasoning model | 1.05M |
 | `tencent/hy3` | Tencent Hy3 agentic reasoning model | 262K |
@@ -163,10 +160,12 @@ Open Router ships as three providers sharing one API key, split by wire style: `
 | `moonshotai/kimi-k2.7-code` | Kimi K2.7 Code reasoning model with vision | 262K |
 | `minimax/minimax-m3` | MiniMax M3 multimodal model | 512K |
 | `deepseek/deepseek-v4.1-flash` | DeepSeek V4.1 Flash with vision | 1.05M |
+| `nvidia/nemotron-3.5-lightning` | Fast specialized agent tasks; text only | 262K |
+| `nvidia/nemotron-3-ultra-550b-a55b` | Complex agentic reasoning; text only, medium/high effort | 202.8K |
 
-`openrouter-responses` serves `openai/gpt-5.6-sol`, `openai/gpt-5.6-sol-pro`, `openai/gpt-5.6-terra`, `openai/gpt-5.6-terra-pro`, `openai/gpt-5.6-luna`, and `openai/gpt-5.6-luna-pro` (1.05M context), plus `openai/gpt-5.3-codex` (400K). The `-pro` ids select OpenRouter's pro reasoning route.
+`openrouter-responses` serves `openai/gpt-6-astra`, `openai/gpt-6-astra-pro`, `openai/gpt-5.6-sol`, `openai/gpt-5.6-sol-pro`, `openai/gpt-5.6-terra`, `openai/gpt-5.6-terra-pro`, `openai/gpt-5.6-luna`, and `openai/gpt-5.6-luna-pro` (1.05M context), plus `openai/gpt-5.3-codex` (400K). The `-pro` ids select OpenRouter's pro reasoning route.
 
-`openrouter-anthropic` serves the Claude family over Anthropic Messages: `anthropic/claude-haiku-4.5` (200K context), plus `anthropic/claude-sonnet-5`, `anthropic/claude-opus-5`, `anthropic/claude-opus-5-fast`, and `anthropic/claude-fable-5.1` (1M).
+`openrouter-anthropic` serves the Claude family over Anthropic Messages: `anthropic/claude-haiku-4.5` (200K context), plus `anthropic/claude-sonnet-5`, `anthropic/claude-opus-5`, and `anthropic/claude-fable-5.1` (1M).
 
 Each provider also accepts any model from Open Router's [full model list](https://openrouter.ai/models) by id, as long as it speaks that provider's wire style.
 
@@ -181,7 +180,6 @@ ante --provider openrouter-anthropic --model anthropic/claude-fable-5.1
 | Model | Description | Context |
 |---|---|---|
 | `deepseek-flash` | DeepSeek V4.1 Flash with vision | 1M |
-| `deepseek-v4-flash` | Legacy alias for DeepSeek V4.1 Flash | 1M |
 
 ```bash
 ante --provider deepseek --model deepseek-flash
@@ -392,7 +390,7 @@ The same fields describe a model fully inside a provider's `preferred_models` (w
 | `effort` | Default [effort level](/usage/models-and-thinking#effort) — `min`, `low`, `medium`, `high`, `xhigh`, or `max`. Omit for models with no reasoning knob (Ante then sends no effort parameter and hides the effort slider). |
 | `supported_efforts` | The effort levels this model accepts on this provider, ascending (same values as `effort`). Replaces the built-in ladder: the effort slider shows exactly these levels, and OpenAI-compatible providers send the selected level as the same-named `reasoning_effort` (`min` is sent as `minimal`). An empty list declares that the model takes no effort setting. Omit to keep the built-in ladder. |
 | `weight_class` | Size/cost tier — `Feather`, `Middle`, or `Heavy`. Drives automatic default and auxiliary model selection (see [Weight classes](#weight-classes)). |
-| `support_vision` | Whether the model accepts image input. When omitted, Ante infers it from the model id; images are filtered out before sending to models that do not support vision, preventing API errors without altering saved history (reading an image against a non-vision model returns its metadata instead of pixels). |
+| `support_vision` | Whether the model accepts image input. Built-in models declare this explicitly; custom models default to `true` when unspecified, and an overlay that omits it keeps the preset value. Set `false` for a text-only endpoint. Images are filtered out before sending to non-vision models without altering saved history; reading an image returns its metadata instead of pixels. |
 
 The `models` section patches a model by id wherever it is defined, layering on top of the canonical spec at resolve time. The built-in presets leave it empty:
 

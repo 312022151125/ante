@@ -7,6 +7,12 @@ Gateway mode runs Ante as a long-lived bot reachable from Slack, Discord, or bot
 
 ## Basic usage
 
+Since Ante v0.2.2, `ante gateway` dispatches to a separately installed `ante-gateway` executable. Install it from the [public repository](https://github.com/AntigmaLabs/ante/tree/main/ante-gateway) root first:
+
+```bash
+cargo install --path ante-gateway
+```
+
 ```bash
 # Start an Ante host first
 ante serve --sock
@@ -15,22 +21,11 @@ ante serve --sock
 ante gateway
 ```
 
-`ante gateway` connects to a running Ante host (`ante serve --sock` or via `--connect`) using the Ante SDK rather than managing an in-process runtime. It reads `~/.ante/channels.json`, connects to every platform you've enabled, and starts listening for messages.
+`ante gateway` and `ante-gateway` run the same external application. Ante searches `~/.ante/bin`, then `PATH`, then `~/.cargo/bin`; if the executable is missing, it prints installation guidance and exits with status `127`.
 
-### Standalone gateway from source
+The gateway connects to the host through the Ante SDK (the `ante serve --sock` socket by default, or an endpoint supplied with `--connect`), reads `~/.ante/channels.json`, and connects to your enabled platforms. It uses the 0.2 SDK/protocol series; run it with a compatible Ante host.
 
-The public repository also includes `ante-gateway`, a standalone SDK client with the same channel configuration and conversation behavior. From the repository root:
-
-```bash
-cargo install --path ante-gateway
-ante-gateway
-```
-
-Start `ante serve --sock` first, as above, or use `ante-gateway --connect stdio` to spawn an Ante host for each conversation. For stdio, the executable is resolved from a non-empty `ANTE` environment variable, then `--executable PATH`, then `ante` on `PATH`. The standalone client is built against SDK/protocol version 0.2.1; use a compatible Ante host.
-
-The standalone binary accepts the gateway flags listed below, plus `--executable` for stdio connections. `ANTE_HOME` overrides the default `~/.ante` directory for `channels.json` and `run/serve.sock`; `ANTE_SERVE_TOKEN` supplies the bearer token for WebSocket hosts. Logs go to stderr, while `--output-format` controls protocol events on stdout.
-
-Installing this package does not replace the gateway bundled with Ante: invoke `ante-gateway` directly to run this source build.
+Alternatively, `ante gateway --connect stdio` spawns an Ante host for each conversation. For stdio, the executable is resolved from a non-empty `ANTE` environment variable, then `--executable PATH`, then `ante` on `PATH`. `ANTE_HOME` controls the default directory for `channels.json` and `run/serve.sock`; `ANTE_SERVE_TOKEN` supplies the bearer token for WebSocket hosts. Logs go to stderr, while `--output-format` controls protocol events on stdout.
 
 ## Configuration
 

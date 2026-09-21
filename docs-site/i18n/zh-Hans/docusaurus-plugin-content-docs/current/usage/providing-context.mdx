@@ -25,6 +25,10 @@ description: "通过 @ 语法引用本地文件，并利用网络工具为智能
 如果直接粘贴多个文件路径，Ante 会自动为其添加 `@` 前缀。单次提示词中可以引用任意数量的文件。
 :::
 
+## 图片与 PDF 附件 {#images-and-pdfs}
+
+在输入框中按 `Ctrl+V` 或 `Ctrl+Shift+V` 可粘贴剪贴板图片；终端需要将该快捷键传给 Ante。使用 OpenAI Responses 格式的提供商时，用户图片与 PDF 附件会保留在发送的请求中。图片输入仍取决于模型的 [`support_vision`](/reference/catalog-reference#model-fields) 能力；纯文本模型的请求会过滤图片，但不改变保存的对话。
+
 ## 检索并获取网络内容 {#pulling-in-web-content}
 
 Ante 可以搜索网络并抓取指定 URL 的内容，让您无需离开终端即可查阅文档、查询 API 或调研技术主题。只需自然提问，Ante 将自动调用网络浏览工具获取信息：

@@ -87,6 +87,16 @@ Frontmatter 的读取规则与[技能 Frontmatter](/extend/skills#creating-a-ski
 └────────────┘    返回结果     └──────────────┘
 ```
 
+### 并发上限 {#concurrency-limit}
+
+在 `~/.ante/settings.json`、命名配置文件或[项目设置](/configuration/preference#project-settings)中设置 `max_concurrent_subagents`，限制每个会话同时运行的子智能体数量。例如，使用一次仅处理一个请求的本地模型时：
+
+```json
+{ "max_concurrent_subagents": 1 }
+```
+
+省略、`null` 或 `0` 表示不限制。达到上限后的调用会显示 `waiting for a subagent slot`，在子智能体打开模型请求流之前等待空位，从而避免排队时间消耗提供商的空闲超时窗口。中断父轮次会取消等待。该设置在新建或恢复会话时读取，没有对应的 CLI 参数或 `SessionRequest` 字段。
+
 ## 智能体发现优先级 {#discovery}
 
 子智能体按以下优先级顺序发现（同名智能体后者覆盖前者）：

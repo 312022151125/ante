@@ -46,13 +46,13 @@ When the agent needs clarification or your input on a design decision, it presen
 
 ### Diff view
 
-When the agent proposes file edits, Ante switches to a fullscreen diff view on an alternate screen. You can review the exact changes before approving. Diff views use numbered gutters, full-width added/removed bands, and `+N -M` change counts in their headers. Completed edit results in the conversation view use a 32-row inline budget that preserves complete diff hunks in file order, with remaining changes summarized and accessible in full via `Ctrl+O`.
+When the agent proposes file edits, Ante switches to a fullscreen diff view on an alternate screen. You can review the exact changes before approving. Diff views use numbered gutters, full-width added/removed bands, and `+N -M` change counts in their headers. Completed edit results in the conversation view use a 32-row inline budget that preserves complete diff hunks in file order, with remaining changes summarized and accessible in full via `Ctrl+O`. Runs of more than three unchanged context lines keep only their first and last lines, without an “unchanged lines” placeholder; line numbers still reflect their original positions.
 
 ### Transcript view
 
 Press `Ctrl+O` to open the transcript view on an alternate screen: the full conversation history with tool results expanded, including lines the inline view truncates. Scroll with `j`/`k` or `PgUp`/`PgDn`, jump with `g`/`G`, and close with `Ctrl+O` or `q`.
 
-In the main chat, contiguous quiet calls such as Bash, Read, Grep, Glob, WebFetch, WebSearch, and MCP tools are grouped into one compact activity cell by default. While calls are running, the cell shows their count, arguments, and elapsed time; long shell commands wrap over up to three rows with a `… (+N chars)` indicator rather than truncating at the margin. Once complete it collapses to a summary such as `Ran 2 shell commands, searched for 3 patterns`. Successful file reads and failed calls break out of that summary onto their own rows beneath it — a read as `Read (src/main.rs) ·110 lines`, a failure as a red `Failed` header with its error on a dim row under it. Standalone shell headers switch from `Run` to `Ran` when they settle. Tool paths inside the project render relative to the session directory, paths elsewhere under your home use `~`, and paths outside both remain absolute. Edit, Write, and Agent calls keep their richer standalone cells, and the transcript view always preserves every call and result. Disable grouping with **Group tool activity** in `/config` or set `"group_tool_activity": false` in `~/.ante/settings.json`; the change applies to new calls only.
+In the main chat, contiguous quiet calls such as Bash, Read, Grep, Glob, WebFetch, WebSearch, and MCP tools are grouped into one compact activity cell by default. While calls are running, the cell shows their count, arguments, and elapsed time; long shell commands wrap over up to three rows with a `… (+N chars)` indicator rather than truncating at the margin. Once complete it collapses to a summary such as `Ran 2 shell commands, searched for 3 patterns`. Successful file reads and failed calls break out of that summary onto their own rows beneath it — a read as `Read (src/main.rs) ·110 lines`, a failure as a red `Failed` header with its error on a dim row under it. Individually displayed Bash calls use their `description` as a stable headline, with a `$ command` preview beneath it and elapsed time as the call runs and completes. Calls without a description still switch from `Run` to `Ran` when they settle. Tool paths inside the project render relative to the session directory, paths elsewhere under your home use `~`, and paths outside both remain absolute. Edit, Write, and Agent calls keep their richer standalone cells, and the transcript view always preserves every call and result. Disable grouping with **Group tool activity** in `/config` or set `"group_tool_activity": false` in `~/.ante/settings.json`; the change applies to new calls only.
 
 After compaction — manual `/compact` or [automatic](/configuration/preference#settings-file) — the conversation shows a collapsed `* Compacted` marker; the transcript view renders the full summary the model wrote. Compaction summaries stream through the standard provider transport, inheriting the same timeout and error handling as regular turns. Ante evicts aged tool results before summarizing, keeps the newest slice and your messages verbatim, and summarizes only the older context the model will no longer see. Manual compaction targets a tighter working set than the automatic trigger, so it normally folds more history; repeating it immediately is a no-op rather than re-folding the fresh summary. If a provider rejects a request below the model's advertised context limit, Ante learns a smaller effective window for that session, rescales the summary and preserved anchors, and retries once. Add instructions when the handoff should preserve a particular thread, for example `/compact focus on the API changes`. When no summary is needed, the instructions have nothing to steer; an info line reports trimmed tool results instead.
 
@@ -60,7 +60,7 @@ After compaction — manual `/compact` or [automatic](/configuration/preference#
 
 The fullscreen views — fullscreen chat, the transcript, the [diff view](#diff-view), and `/diff` output — capture the mouse for wheel scrolling, so they handle selection themselves instead of leaving it to the terminal. Drag across the text and it copies on release; the footer confirms with `copied N lines`. Double-click selects a word, counting `_-./~+@#$%&=:` as word characters so a path or URL comes out whole, and triple-click selects the logical line. Dragging on the top or bottom row scrolls and keeps extending the selection past the viewport. In fullscreen chat, `PgUp` / `PgDn` also scroll the conversation; reaching the bottom re-pins the view so new output follows again.
 
-Copies rejoin soft-wrapped rows into the lines they came from, so a wrapped command or URL pastes back intact. Tool output, code blocks, tables, and diffs copy as displayed. Copies go to the OS clipboard and also as an OSC 52 escape, so they work over SSH and inside tmux; selections above 100 KB skip the OSC 52 channel. Clicking outside the content clears the selection, and a whitespace-only grab never touches the clipboard.
+Copies rejoin soft-wrapped rows, including notices and user-run shell output, into the lines they came from, so a wrapped command or URL pastes back intact. Tool output, code blocks, tables, and diffs copy as displayed. Copies go to the OS clipboard and also as an OSC 52 escape, so they work over SSH and inside tmux; selections above 100 KB skip the OSC 52 channel. Clicking outside the content clears the selection, and a whitespace-only grab never touches the clipboard.
 
 Inline mode does not capture the mouse, so your terminal's own selection and scrollback still apply there.
 
@@ -113,7 +113,7 @@ On resume, Ante:
 - Re-discovers agents and skills in the project directory (unless the session was started with `--no-skills`)
 - Refreshes system prompts and tool definitions (so new features are available)
 - Adopts your current permission settings instead of stale saved modes (a session saved in Yolo no longer overrides your Strict or Auto rules on resume)
-- Replays up to 200 recent events so the TUI rebuilds the conversation view
+- Replays the complete persisted event log to rebuild the conversation view, with no 200-event cap
 
 Sessions are stored in `~/.ante/sessions/{session_id}/` with atomic writes for crash safety.
 
@@ -157,7 +157,7 @@ When a Claude Code or Codex session in the current directory was active within t
 | `Ctrl+R` | Start reverse-i-search through prompt history |
 | `Ctrl+C` | Interrupt the active turn; press twice in a row to exit (or use `/exit`) |
 | `Ctrl+S` | Steer queued messages into the running turn |
-| `Ctrl+V` | Paste text or an image from the clipboard |
+| `Ctrl+V` / `Ctrl+Shift+V` | Paste text or an image from the clipboard |
 | `Escape` | Close a popup, or interrupt the active turn when none is open |
 
 ### Line editing
@@ -241,7 +241,7 @@ Prefix any input with `!` to run it directly as a shell command instead of sendi
 !cargo build
 ```
 
-The command runs in your own login shell (`$SHELL -lc`, falling back to `/bin/sh`) from the current working directory, with a 120-second timeout. Its output is shown in the conversation and also fed to the agent as context for the next turn, so you can run a command yourself and then ask the agent to act on what it printed.
+The command runs in your own login shell (`$SHELL -lc`, falling back to `/bin/sh`) from the current working directory, with a 120-second timeout. The command appears in the conversation as soon as it is invoked, before it finishes. Its output is fed to the agent as context for the next turn, so you can run a command yourself and then ask the agent to act on what it printed.
 
 :::note
 Bash mode runs locally and is never gated by the permission system — typing `!` is the authorization. This is separate from the agent's own `Bash` tool, which still goes through tool approval. A bare `!` with nothing after it is sent as a normal message. Interactive programs (editors, pagers) won't work, since bash mode has no terminal input.
@@ -267,7 +267,7 @@ The prediction is generated off the critical path on the cheapest available mode
 
 ## Spinner thinking phrase
 
-While you type a longer prompt, Ante predicts a short, task-specific phrase and uses it as the spinner label for that turn instead of the generic rotating messages. Like the next-prompt suggestion, it runs best-effort on the cheapest model off the critical path, and alarming or destructive words are filtered out of the phrase. On by default; disable with `"ambient_thinking_phrase": false` in `~/.ante/settings.json`.
+While you type a longer prompt, Ante predicts a short, task-specific phrase and uses it as the spinner label for that turn instead of the stable default `Running…` label. Like the next-prompt suggestion, it runs best-effort on the cheapest model off the critical path, and alarming or destructive words are filtered out of the phrase. On by default; disable with `"ambient_thinking_phrase": false` in `~/.ante/settings.json`.
 
 ## Spinner tips
 
@@ -278,7 +278,7 @@ While the agent works, Ante shows a short tip under the spinner pointing at a fe
   └─ Tip: Press ctrl+r to search your prompt history.
 ```
 
-Tips come from a small curated list (features, keyboard shortcuts, workflow habits) — no model call is involved. Selection is deterministic: the least recently shown eligible tip wins, each tip has a cooldown measured in app restarts so it doesn't repeat session after session, and a tip shown once stays quiet for the rest of that session. The working spinner delays its appearance until three seconds into a turn, eliminating unnecessary animations on quick replies. When active, the tip appears under the spinner, stays until the turn ends, and never enters the transcript.
+Tips come from a small curated list (features, keyboard shortcuts, workflow habits) — no model call is involved. Selection is deterministic: the least recently shown eligible tip wins, each tip has a cooldown measured in app restarts so it doesn't repeat session after session, and a tip shown once stays quiet for the rest of that session. The spinner appears after about 300 ms without new activity; interrupt and token details appear after three seconds of turn execution, and elapsed time appears after ten seconds. Tips appear after five seconds without activity; new activity resets that wait, and tips never enter the transcript.
 
 On by default; disable with `"tips": false` in `~/.ante/settings.json`. Show history lives in `~/.ante/tip_history.json` — delete it to reset the rotation.
 
