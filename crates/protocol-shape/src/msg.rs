@@ -182,6 +182,14 @@ pub enum Evt {
     ToolStart(ToolUse),
     ToolUpdate(ToolUpdate),
     ToolEnd(ToolEnd),
+    /// Work a tool call handed off ended: a Bash job that outlived its wait
+    /// window. `tool_use_id` is the call whose `ToolEnd` reported the hand-off.
+    /// `exit_code` is the process exit code, `128 + signal` for a signal
+    /// death, absent only when the exit could not be observed.
+    TaskEnd {
+        tool_use_id: String,
+        exit_code: Option<i32>,
+    },
     CompactStart,
     /// Compaction finished. `summary` is the text that replaced the
     /// compacted history and carries forward as the session's context;
@@ -978,6 +986,19 @@ mod tests {
         let mut expected = legacy;
         expected["tool_name"] = serde_json::json!("Bash");
         assert_eq!(serde_json::to_value(end).unwrap(), expected);
+    }
+
+    #[test]
+    fn task_end_round_trips_with_observed_or_unobserved_exit() {
+        for exit_code in [Some(2), None] {
+            let json = serde_json::json!({
+                "TaskEnd": { "tool_use_id": "bash-1", "exit_code": exit_code }
+            });
+            let event: super::Evt = serde_json::from_value(json.clone()).unwrap();
+            assert!(matches!(&event, super::Evt::TaskEnd { tool_use_id, exit_code: code }
+                if tool_use_id == "bash-1" && *code == exit_code));
+            assert_eq!(serde_json::to_value(event).unwrap(), json);
+        }
     }
 
     #[test]

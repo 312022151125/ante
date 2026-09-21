@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.2.3 - 2026-09-21
+
+### Added
+- Bare `ante --resume` opens the interactive session picker directly without requiring a session ID or creating a throwaway session
+- First-class `System` message role for runtime instructions, serializing natively to Anthropic system and OpenAI developer messages with fallback to system reminders
+
+### Changed
+- Preserve subagent deliverables in parent handoffs by returning final task answers directly instead of requesting an extra synthetic summary turn
+- Clarify context compaction marker to state that earlier history remains for reference while the model sees only the summary
+- Working spinner remains visible continuously throughout active turns (streaming, thinking, and tool execution)
+- Active background jobs are highlighted with the theme accent and display without obstructing scrollback
+- AskUser accepts single-option questions to avoid unnecessary retries, and surfaces tool errors visibly in chat
+- TUI performance and state ownership optimizations: cached row span allocation reductions, single-fact settings ownership in `AppState`, and git branch re-reading only at turn and tool boundaries
+
+### Wire
+- `Evt::TaskEnd` event added to notify clients of structured job and background task completions
+
+### Crates
+- Public crates published as 0.2.3: ante-protocol-shape, ante-llm, ante-exec, ante-sdk
+
 ## v0.2.2 - 2026-09-20
 
 ### Added
