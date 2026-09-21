@@ -49,6 +49,14 @@ Keep the existing CLI behavior, and run the relevant tests.
 
 The [Approvals guide](/usage/approvals) walks through permission choices and session grants.
 
+### Answer a clarifying question
+
+When Ante needs your input, it can present a question with selectable answers directly in the TUI. Read the options, use the arrow keys to choose, and press `Enter`. Choose **Type something** or **Chat about this** when you want to give your own answer or discuss the decision.
+
+<a href="/assets/cookbook/ask-tool-demo.gif" target="_blank" rel="noreferrer">
+  <img src="/assets/cookbook/ask-tool-demo.gif" alt="Ante asking a multiple-choice question, receiving an answer, and continuing the conversation" className="cookbook-demo" loading="lazy" />
+</a>
+
 ### Look into the details {#transcript-view}
 
 Press `Ctrl+O` to open the full transcript, including expanded tool output and reasoning hidden in the main conversation. Scroll with `j` / `k` or `PgUp` / `PgDn`, then press `Ctrl+O` or `q` to return to chat.
@@ -78,11 +86,68 @@ The command's output becomes context for your next message. Follow up with `Expl
 
 These commands run immediately under your authorization. For interactive programs, use a terminal session instead.
 
-### Work with a server or REPL {#terminal-sessions}
+## Orchestrate agents with /term {#terminal-sessions}
 
-Ask Ante to start a development server or REPL in a named terminal session. Run `/term` to choose a live session and watch or interact with it. Run `/term <name>` again to detach the viewer while leaving the program running.
+`/term` opens a terminal that both you and Ante can drive. Use it to work with another Ante instance, Claude Code, Codex, a development server, or a REPL. You can give instructions in your main conversation, watch the other program work, and step in to type directly whenever you need to.
 
-Terminal sessions require `tmux` and survive Ante restarts. Use the `/term` picker to stop them when you're finished. See [terminal controls](/reference/tui-reference#terminal-sessions) for launch and attach options.
+### Open an agent and give it a task
+
+With `tmux` installed, type this inside Ante:
+
+```text
+/term ante
+```
+
+A new terminal session starts another Ante instance in a split or window. Back in the main conversation, try:
+
+```text
+In the ante terminal, ask the other agent to review the current diff.
+Read its findings and tell me which issues we should address.
+```
+
+Ante sends the task, reads the other agent's output, and can follow up while you watch. This demo shows it opening another Ante session, asking a question, reading the answer, and detaching the viewer:
+
+<a href="/assets/cookbook/ante-term-demo.gif" target="_blank" rel="noreferrer">
+  <img src="/assets/cookbook/ante-term-demo.gif" alt="Ante orchestrating another Ante instance through a shared terminal split" className="cookbook-demo" loading="lazy" />
+</a>
+
+Use `/term claude` or `/term codex` for those installed CLIs. Ask Ante to give each agent the same problem and compare their answers, or assign different parts of a task to separate sessions. Each terminal keeps its own conversation, and you can interact with it directly to answer questions or guide the work.
+
+### Fork a conversation {#fork-a-conversation}
+
+To explore another direction from a saved Claude Code or Codex conversation, open a fresh named terminal:
+
+```text
+/term review
+```
+
+Choose one of these commands to run in that terminal, depending on the installed agent:
+
+```bash
+# Fork the most recent Claude Code conversation in this directory
+claude --continue --fork-session
+
+# Fork the most recent Codex conversation
+codex fork --last
+```
+
+The agent's native fork command carries its saved conversation into a new session. To branch work from your current Ante conversation, ask Ante to start another named session with an explicit handoff:
+
+```text
+Start another Ante session named edge-cases. Give it our task,
+constraints, and findings so far. Have it investigate edge cases
+while we continue with the implementation here.
+```
+
+Then open `/term edge-cases` to watch or join that conversation. The handoff supplies the new agent's context; each session has its own history.
+
+### Keep interactive subagents available
+
+Run `/term` to list live sessions and attach to the one you need. Running `/term <name>` again detaches its viewer while the program keeps running. Terminal sessions survive the main Ante exiting or restarting, so a later conversation can reconnect and continue coordinating them while the tmux server is still running.
+
+Opening an existing session attaches to its running program; launch arguments only apply when creating a session. For another agent or conversation branch, use a fresh session name and ask Ante to launch the program there. Stop sessions through the `/term` picker when their work is finished.
+
+The same flow works for a development server, REPL, or other interactive tool. See [terminal controls](/reference/tui-reference#terminal-sessions) for launch options, supported terminal apps, and session management, or [Sub-Agents](/extend/subagents) for delegation through the built-in `Agent` tool.
 
 ## Choose a model for the next step
 
@@ -123,6 +188,10 @@ With session saving enabled (the default), you can exit with `/exit` and return 
 1. Run `ante` from the same project directory.
 2. Type `/resume` and find the conversation by its title or first message.
 3. Press `Enter`, then send your next instruction.
+
+<a href="/assets/cookbook/resume-demo-1.gif" target="_blank" rel="noreferrer">
+  <img src="/assets/cookbook/resume-demo-1.gif" alt="Choosing a saved conversation with /resume and continuing it with a new message" className="cookbook-demo" loading="lazy" />
+</a>
 
 Ante restores the saved conversation and uses your current permission settings. You can also launch directly with `ante --resume <SESSION_ID>`. Sessions started with `--no-session-save` aren't available to resume.
 

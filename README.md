@@ -66,6 +66,24 @@ We think about the engine layer in public too. [**nanochat-rs**](https://github.
 
 These three properties are one design decision. An agent you can **verify**, **afford**, and **run anywhere** is light enough to run by the *thousands*: the substrate for self-organizing intelligence.
 
+## Orchestrate agents with `/term`
+
+**Open an agent in a terminal. Let Ante drive it. Step in whenever you want.** `/term` gives you and Ante a shared view of another interactive session, so coordinating agents feels like working side by side in your terminal.
+
+```text
+/term ante
+/term claude
+/term codex
+```
+
+Each command opens a named terminal and launches the installed CLI when the session is new. Ask the main Ante to give another agent a task, read its progress, send follow-up prompts, or compare answers from several agents. You can watch and type in the same terminal at any time.
+
+![Ante opening another agent in a terminal split, sending it a question, reading its answer, and detaching the viewer](docs-site/static/assets/cookbook/ante-term-demo.gif)
+
+Use an agent's native fork command to **branch a saved conversation**, or ask Ante to hand the current task and findings to a fresh session. These terminals make useful **persistent, interactive subagents**: detach a viewer and the agent keeps running; restart Ante and reconnect to the same live session. Run `/term` to find your sessions, attach or detach, and stop them when you're done.
+
+Requires `tmux` and whichever agent CLIs you want to run. [**Terminal orchestration walkthrough →**](https://docs.antigma.ai/usage/tui#terminal-sessions) · [Forking conversations →](https://docs.antigma.ai/usage/tui#fork-a-conversation)
+
 ## See it in action
 
 <table>

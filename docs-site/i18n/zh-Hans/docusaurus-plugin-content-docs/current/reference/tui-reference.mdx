@@ -123,6 +123,12 @@ Ante 会自动将所有会话持久化到磁盘中。输入 `/resume` 即可随�
 也可以在终端命令行中通过 `ante --resume <SESSION_ID>`（或 `-r`）直接恢复会话。TUI 会话退出时会自动打印当前会话 ID。
 :::
 
+从终端打开已保存的对话，会恢复其历史记录，让你从上次进度继续：
+
+<a href="/assets/cookbook/resume-demo-2.gif" target="_blank" rel="noreferrer">
+  <img src="/assets/cookbook/resume-demo-2.gif" alt="从终端打开会话选择器并恢复已保存的对话" className="cookbook-demo" loading="lazy" />
+</a>
+
 ### 会话标题 {#session-title}
 
 会话可以带一个标题 —— 由您指定的名称，绝不会从对话内容中推断生成：
@@ -250,6 +256,8 @@ Bash 模式在本地直接执行，无需权限审批 —— 输入 `!` 即代�
 :::
 
 ## 终端会话管理 {#terminal-sessions}
+
+编排智能体、分叉对话和管理持久交互式子智能体的图文流程，请参阅[使用 /term 编排智能体](/usage/tui#terminal-sessions)。
 
 智能体可以通过常驻的命名 tmux 会话（`ante-*`）驱动交互式程序（如本地 Dev Server、REPL、SSH 或其他 CLI 智能体），使用普通的 `tmux` 命令配合内置的 `tmux` 技能进行控制。会话位于 `ante-` 命名空间下，在 Ante 重启后依然保持存活：后续对话可以随时接管之前留下的服务。您拥有会话的完全生命周期所有权 —— 退出 TUI 时不会杀死后台会话。默认的 `terminals` 状态栏条目会在底部展示正在运行的会话。
 

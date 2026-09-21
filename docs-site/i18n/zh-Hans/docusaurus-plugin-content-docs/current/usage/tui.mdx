@@ -47,6 +47,14 @@ ante
 
 权限选项与会话授权请参阅[审批指南](/usage/approvals)。
 
+### 回答澄清问题 {#answer-a-clarifying-question}
+
+需要你的输入时，Ante 可以直接在 TUI 中显示带有选项的问题。阅读选项，使用方向键选择，再按 `Enter` 确认。若想自行输入答案或讨论这个决定，可以选择 **Type something** 或 **Chat about this**。
+
+<a href="/assets/cookbook/ask-tool-demo.gif" target="_blank" rel="noreferrer">
+  <img src="/assets/cookbook/ask-tool-demo.gif" alt="Ante 提出选择题、收到回答并继续对话" className="cookbook-demo" loading="lazy" />
+</a>
+
 ### 查看完整执行细节 {#transcript-view}
 
 按 `Ctrl+O` 打开完整记录，包括主对话中折叠的工具输出和思考内容。使用 `j` / `k` 或 `PgUp` / `PgDn` 滚动，再按 `Ctrl+O` 或 `q` 返回对话。
@@ -76,11 +84,68 @@ ante
 
 这些命令会在你的授权下立即运行。交互式程序请使用终端会话。
 
-### 使用服务器或 REPL {#terminal-sessions}
+## 使用 /term 编排智能体 {#terminal-sessions}
 
-请 Ante 在命名终端会话中启动开发服务器或 REPL。运行 `/term` 选择现有会话，查看或直接操作程序。再次运行 `/term <name>` 可分离查看窗口，程序仍会继续运行。
+`/term` 打开一个你和 Ante 都能操作的终端。可以在其中运行另一个 Ante 实例、Claude Code、Codex、开发服务器或 REPL。你可以在主对话中下达指令，观看另一个程序工作，也可以随时直接输入并参与操作。
 
-终端会话需要 `tmux`，并会在 Ante 重启后保留。完成后可通过 `/term` 选择器停止会话。启动和连接选项请参阅[终端控制](/reference/tui-reference#terminal-sessions)。
+### 打开智能体并分配任务 {#open-an-agent-and-give-it-a-task}
+
+安装 `tmux` 后，在 Ante 中输入：
+
+```text
+/term ante
+```
+
+新建的终端会话会在分屏或窗口中启动另一个 Ante 实例。回到主对话，可以这样说：
+
+```text
+在 ante 终端中，请另一个智能体审查当前 diff。
+读取它的发现，并告诉我哪些问题需要处理。
+```
+
+Ante 会发送任务、读取另一个智能体的输出，并在你观看时继续追问。下面的演示展示了打开另一个 Ante 会话、提出问题、读取回答和分离查看窗口的过程：
+
+<a href="/assets/cookbook/ante-term-demo.gif" target="_blank" rel="noreferrer">
+  <img src="/assets/cookbook/ante-term-demo.gif" alt="Ante 通过共享终端分屏编排另一个 Ante 实例" className="cookbook-demo" loading="lazy" />
+</a>
+
+使用 `/term claude` 或 `/term codex` 可打开对应的已安装 CLI。可以请 Ante 将同一问题交给多个智能体并比较答案，也可以让不同会话分别承担任务的一部分。每个终端保留自己的对话，你可以直接参与，回答问题或调整工作方向。
+
+### 分叉对话 {#fork-a-conversation}
+
+若想从已保存的 Claude Code 或 Codex 对话中探索另一个方向，先打开一个新的命名终端：
+
+```text
+/term review
+```
+
+根据已安装的智能体，在该终端中选择运行以下一条命令：
+
+```bash
+# 分叉当前目录中最近的 Claude Code 对话
+claude --continue --fork-session
+
+# 分叉最近的 Codex 对话
+codex fork --last
+```
+
+智能体自身的分叉命令会将已保存的对话带入新会话。若想从当前 Ante 对话中分出一条工作分支，可以请 Ante 启动另一个命名会话，并明确交接上下文：
+
+```text
+启动另一个名为 edge-cases 的 Ante 会话。
+把我们的任务、约束和当前发现交给它，让它调查边界情况，
+同时我们继续在这里实现功能。
+```
+
+然后通过 `/term edge-cases` 查看或加入该对话。交接内容为新智能体提供上下文；各会话保留独立的历史记录。
+
+### 管理持久交互式子智能体 {#keep-interactive-subagents-available}
+
+运行 `/term` 列出当前会话并连接到需要的终端。再次运行 `/term <name>` 会分离查看窗口，程序仍继续运行。主 Ante 退出或重启后，终端会话依然保留；只要 tmux 服务仍在运行，后续对话就可以重新连接并继续协调它们。
+
+打开已有会话会连接到正在运行的程序；启动参数只在创建会话时生效。需要另一个智能体或对话分支时，使用新的会话名称，并请 Ante 在其中启动程序。任务完成后，通过 `/term` 选择器停止会话。
+
+开发服务器、REPL 和其他交互式工具也可以使用同样的流程。启动选项、支持的终端应用及会话管理请参阅[终端控制](/reference/tui-reference#terminal-sessions)；通过内置 `Agent` 工具委派任务请参阅[子智能体](/extend/subagents)。
 
 ## 为下一步选择模型 {#choose-a-model-for-the-next-step}
 
@@ -121,6 +186,10 @@ Ante 会持续检查进展是否满足条件。使用 `/goal` 查看状态，使
 1. 在同一个项目目录中运行 `ante`。
 2. 输入 `/resume`，按标题或首条消息找到对话。
 3. 按 `Enter`，然后发送下一条指令。
+
+<a href="/assets/cookbook/resume-demo-1.gif" target="_blank" rel="noreferrer">
+  <img src="/assets/cookbook/resume-demo-1.gif" alt="使用 /resume 选择已保存的对话并发送新消息继续工作" className="cookbook-demo" loading="lazy" />
+</a>
 
 Ante 会恢复保存的对话，并使用当前权限设置。也可以直接运行 `ante --resume <SESSION_ID>`。使用 `--no-session-save` 启动的会话无法恢复。
 
