@@ -5,7 +5,8 @@ description: "在一分钟内安装 Ante 并开始使用"
 
 ## 前置准备 {#prerequisites}
 
-- 至少一家大语言模型提供商（Anthropic、OpenAI 等）的 API 密钥或订阅 —— 或者使用[离线模式](/local/offline)无需任何 API 密钥
+- 一个 **Antix** 账户、**Anthropic (Claude)** 订阅、**OpenAI (ChatGPT/Codex)** 订阅，或提供商 API 密钥。
+- 也可以使用[离线模式](/local/offline)，无需账户或 API 密钥。
 
 ## 安装 {#installation}
 
@@ -24,6 +25,42 @@ curl -fsSL https://ante.run/install.sh | ANTE_INSTALL_DIR=/usr/local/bin bash
 请以普通用户身份运行默认安装脚本，不要使用 `sudo`。若使用 sudo 安装到用户主目录会导致 `~/.ante` 归属于 root 用户，从而阻止 Ante 正常保存设置和输入历史，因此安装脚本会拒绝该组合。
 
 macOS 平台的发布二进制文件已经过 Apple 开发者证书签名与公证（Notarized），Gatekeeper 安全检查会自动放行。
+
+## 使用已有账户或密钥开始 {#start-with-your-existing-account-or-key}
+
+已经有上述账户或提供商 API 密钥？进入项目目录，直接启动 Ante：
+
+```bash
+cd your-project
+ante
+```
+
+如果已在当前 Shell 中导出 API 密钥，或之前已通过 Ante 登录，就可以直接发送提示词。Ante 会自动检测可用凭据；使用其他提供商无需登录 Antix。
+
+Ante 会检测 `ANTHROPIC_API_KEY`、`OPENAI_API_KEY` 和 `GEMINI_API_KEY` 等密钥。所有受支持的提供商与环境变量请参阅[提供商目录](/reference/catalog-reference#built-in-providers)。
+
+首次在 Ante 中使用账户？输入 `/connect`，选择 **Antix**、**Anthropic Subscription** 或 **OpenAI Subscription**，然后在浏览器中完成登录。也可以通过 `/welcome` 粘贴 API 密钥，或通过 `/providers` 在已连接的提供商之间切换。
+
+## 使用 Antix 登录 {#log-in-with-antix}
+
+若要通过命令行连接 Antix 账户，可以在启动会话前登录：
+
+```bash
+ante auth login antix
+```
+
+在浏览器中完成登录，然后回到终端。Ante 会保存凭据供后续会话使用。
+
+进入项目目录并开始对话：
+
+```bash
+cd your-project
+ante --provider antix
+```
+
+可以先问：`解释这个项目的目录结构，并指出主要入口。`
+
+也可以在 TUI 中登录：运行 `ante`，输入 `/connect` 并选择 **Antix**。其他提供商的 OAuth 登录及 API 密钥配置请参阅[连接提供商](/usage/providers)。
 
 ## 快速示例 {#quick-examples}
 

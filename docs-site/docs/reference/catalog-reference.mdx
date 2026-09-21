@@ -5,7 +5,7 @@ description: "Built-in providers, models, and the catalog.json schema"
 
 Ante resolves every provider and model from a **catalog**: the built-in presets documented here, with your [`~/.ante/catalog.json`](#catalogjson-schema) merged on top at startup. The catalog is read once per process — restart Ante to pick up edits.
 
-This page is the exhaustive reference. For how to pick a provider day to day and copy-paste customization recipes, see [Providers](/usage/providers).
+This page is the exhaustive reference. For sign-in and API-key setup, see [Connect a provider](/usage/providers). For configuration examples, jump to [Custom catalog](#custom-catalog).
 
 ## Built-in providers
 
@@ -30,7 +30,7 @@ The presets below match **v0.2.2**: 15 hosted-provider presets, plus `local` whe
 | Antix (API key) | `antix-api-key` | `AnthropicMessage` | `ANTIX_API_KEY` |
 | Local | `local` | `OpenAiCompatible` | none |
 
-The `key` column is what you pass to `--provider`. Providers authenticating via OAuth (`anthropic-subscription`, `openai-subscription`, `antix`) sign in interactively through the TUI; the rest read an API key from the listed environment variable.
+The `key` column is what you pass to `--provider`. Providers authenticating via OAuth (`anthropic-subscription`, `openai-subscription`, `antix`) sign in through `/connect` in the TUI. Antix also supports `ante auth login antix` from the CLI; API-key providers read an API key from the listed environment variable.
 
 ## Models by provider
 
@@ -229,6 +229,163 @@ Run GGUF models locally via the built-in llama.cpp engine — no API key require
 ante --provider local
 ```
 
+## Custom catalog
+
+Create `~/.ante/catalog.json` to add a provider Ante doesn't ship, patch a built-in one, or tweak a model's defaults. It is merged on top of the built-in presets at startup, so you only specify what you want to add or change. Prefer not to write it by hand? Run `/add-provider` in the TUI: Ante discovers the endpoint's models, can probe which effort levels each one accepts, and writes the entry for you (restart to load it). The examples below are the common cases; see the [schema below](#catalogjson-schema) for all fields and authentication forms.
+
+### Add a hosted provider
+
+Most hosted endpoints are OpenAI-compatible. Register one with `wire_style: "OpenAiCompatible"`, point `base_url` at it, and list the models you want to appear in the picker:
+
+```json
+{
+  "providers": {
+    "together": {
+      "display_name": "Together AI",
+      "base_url": "https://api.together.xyz/v1",
+      "wire_style": "OpenAiCompatible",
+      "auth": { "bearer": { "env_key": "TOGETHER_API_KEY" } },
+      "preferred_models": [
+        {
+          "id": "moonshotai/Kimi-K2-Instruct",
+          "description": "Kimi K2 on Together",
+          "max_tokens": 16384,
+          "context_limit": 128000,
+          "effort": "medium"
+        }
+      ]
+    }
+  }
+}
+```
+
+```bash
+export TOGETHER_API_KEY="..."
+ante --provider together --model moonshotai/Kimi-K2-Instruct
+```
+
+### Declare the effort levels a model accepts
+
+The [effort slider](/usage/models-and-thinking#effort)'s ladder is built in per provider and model family, so a model on a custom endpoint may get a ladder that doesn't match what the endpoint really accepts. Declare the true set with `supported_efforts` — the slider then shows exactly those levels, and OpenAI-compatible providers send the selected level as the same-named `reasoning_effort`:
+
+```json
+"preferred_models": [
+  {
+    "id": "kimi-k3",
+    "effort": "high",
+    "supported_efforts": ["low", "medium", "high"]
+  }
+]
+```
+
+An empty list (`"supported_efforts": []`) declares that the model takes no effort setting at all. There is no API that reports supported levels, so when in doubt let `/add-provider` probe the endpoint for you.
+
+### Add a local provider with no auth
+
+Omit `auth` for a provider that needs no key, and leave `preferred_models` off when the provider has no stable picker/default model list — handy for a local server like Ollama where the available models change as you pull them. You can still pass any model id explicitly with `--provider` and `--model`:
+
+```json
+{
+  "providers": {
+    "ollama": {
+      "display_name": "Ollama",
+      "base_url": "http://localhost:11434/v1",
+      "wire_style": "OpenAiCompatible"
+    }
+  }
+}
+```
+
+```bash
+ante --provider ollama --model qwen2.5-coder:7b
+```
+
+### Patch a built-in provider
+
+When the key matches a built-in provider, only the fields you set are changed.
+Set optional fields such as `auth` or `http_headers` to `null` to clear the
+preset value:
+
+```json
+{
+  "providers": {
+    "openai": {
+      "base_url": "http://localhost:8080/v1",
+      "auth": null
+    }
+  }
+}
+```
+
+### Send extra request parameters
+
+Gateways and proxies often require a parameter Ante doesn't model. Put it in `extra_body` and it is merged into every chat and streaming request body for that provider:
+
+```json
+{
+  "providers": {
+    "my-gateway": {
+      "display_name": "My Gateway",
+      "base_url": "https://gateway.example.com/v1",
+      "wire_style": "OpenAiCompatible",
+      "auth": { "bearer": { "env_key": "MY_GATEWAY_API_KEY" } },
+      "extra_body": {
+        "service_tier": "priority"
+      }
+    }
+  }
+}
+```
+
+`extra_body` can only add fields — keys Ante already generates for that wire style (`model`, `messages`, `stream`, and friends) are dropped at startup with a notice, and the provider still loads. See [Extra request fields](/reference/catalog-reference#extra-request-fields) for the full reserved list.
+
+### Override model defaults
+
+The `models` section patches a model by id without redefining it. Each field you set replaces the built-in default; everything else is left alone:
+
+```json
+{
+  "models": {
+    "claude-opus-5": { "effort": "max" },
+    "claude-sonnet-5": { "effort": "high", "max_tokens": 64000 },
+    "gpt-5.5": { "temperature": 0.2 }
+  }
+}
+```
+
+## Third-party providers
+
+### Using Open Router
+
+1. Sign up at [openrouter.ai](https://openrouter.ai/) and generate an API key.
+2. Set your API key:
+   ```bash
+   export OPENROUTER_API_KEY="sk-or-..."
+   ```
+3. Use any model from [Open Router's model list](https://openrouter.ai/models):
+   ```bash
+   ante --provider openrouter --model deepseek/deepseek-reasoner
+   ```
+
+### OpenAI-compatible providers
+
+Many LLM providers expose an OpenAI-compatible API (e.g., Together AI, Fireworks, Groq Cloud, Perplexity). For a one-off you can reuse the built-in `openai-compatible` provider via env vars (no catalog edit needed):
+
+1. Set the base URL — the per-provider variable takes precedence over `MODEL_BASE_URL`:
+   ```bash
+   export OPENAI_COMPATIBLE_BASE_URL="https://api.together.xyz/v1"
+   ```
+2. Set your API key:
+   ```bash
+   export OPENAI_COMPATIBLE_API_KEY="your-provider-api-key"
+   ```
+3. Run with the OpenAI Compatible provider:
+   ```bash
+   ante --provider openai-compatible --model meta-llama/Llama-3-70b-chat-hf
+   ```
+
+For something you'll use repeatedly, add a named provider to your [custom catalog](#custom-catalog) instead so it shows up in the picker.
+
 ## `catalog.json` schema
 
 `~/.ante/catalog.json` is merged on top of the built-in presets at startup. It has two optional top-level keys, both maps keyed by id:
@@ -413,6 +570,8 @@ Models with no `weight_class` set fall back to catalog order. Set `weight_class`
 
 ## How a model and provider are chosen
 
+Explicit `--provider` and `--model` flags override the `provider` and `model` values in `~/.ante/settings.json`. When neither source specifies a choice, Ante uses the auto-detection rules below.
+
 When Ante resolves a model id it layers three sources, last wins:
 
 1. **Canonical spec** — the first provider (in catalog order) whose `preferred_models` lists that id. An unknown id falls back to a bare default spec.
@@ -454,6 +613,6 @@ Only a file that isn't a JSON object at all is rejected outright. A missing `cat
 
 ## Related
 
-- [Providers](/usage/providers) — choosing a provider and customization recipes
+- [Connect a provider](/usage/providers) — sign in with OAuth or an API key
 - [Storage Reference](/reference/storage-reference) — where `catalog.json` lives on disk
 - [Offline Mode](/local/offline) — running local GGUF models

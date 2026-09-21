@@ -5,7 +5,8 @@ description: "Install Ante and start using it in under a minute"
 
 ## Prerequisites
 
-- An API key or subscription from at least one LLM provider (Anthropic, OpenAI, etc.) — or use [offline mode](/local/offline) with no API key
+- An **Antix** account, an **Anthropic (Claude)** subscription, an **OpenAI (ChatGPT/Codex)** subscription, or a provider API key.
+- You can also use [offline mode](/local/offline) with no account or API key.
 
 ## Installation
 
@@ -24,6 +25,42 @@ curl -fsSL https://ante.run/install.sh | ANTE_INSTALL_DIR=/usr/local/bin bash
 Run the default installer as your normal user, not with `sudo`. A sudoed home-directory install would leave `~/.ante` root-owned and prevent Ante from saving settings and input history, so the installer refuses that combination.
 
 macOS release binaries are Developer ID-signed and notarized, so Gatekeeper accepts them without a manual security bypass.
+
+## Start with your existing account or key
+
+Already have one of the accounts above or a provider API key? Open your project and start Ante:
+
+```bash
+cd your-project
+ante
+```
+
+If your API key is already exported in your shell, or you've previously signed in through Ante, you're ready to send a prompt. Ante detects available credentials automatically; no Antix login is required to use another provider.
+
+Ante detects keys such as `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, and `GEMINI_API_KEY`. See the [provider catalog](/reference/catalog-reference#built-in-providers) for all supported providers and environment variables.
+
+Using an account for the first time in Ante? Type `/connect` and choose **Antix**, **Anthropic Subscription**, or **OpenAI Subscription**, then finish signing in through your browser. You can also use `/welcome` to paste an API key, or `/providers` to choose between connected providers.
+
+## Log in with Antix
+
+To connect an Antix account from the command line, sign in before starting a session:
+
+```bash
+ante auth login antix
+```
+
+Complete sign-in in the browser, then return to your terminal. Ante saves your credentials for future sessions.
+
+Open your project and start chatting:
+
+```bash
+cd your-project
+ante --provider antix
+```
+
+Try a first prompt such as `Explain how this project is organized and where its main entry point is.`
+
+You can also sign in inside the TUI: run `ante`, type `/connect`, and choose **Antix**. To use another provider's OAuth login or an API key, see [Connect a provider](/usage/providers).
 
 ## Quick examples
 

@@ -20,7 +20,7 @@ description: "在交互式 TUI 终端中用于常用操作的内置命令"
 | `/connect` | 通过 OAuth 登录（API 密钥会自动检测） |
 | `/models [model_id]` | 不带参数时，打开当前提供商的模型与思考深度选择器；带模型 ID 时，直接切换至该模型 —— 包含目录未列出的 ID |
 | `/providers` | 为当前会话选择可用的提供商 |
-| `/add-provider` | 在 `catalog.json` 中配置自定义提供商 —— 发现端点模型并可探测每个模型支持的思考深度（参见[自定义模型目录](/usage/providers#custom-catalog)） |
+| `/add-provider` | 在 `catalog.json` 中配置自定义提供商 —— 发现端点模型并可探测每个模型支持的思考深度（参见[自定义模型目录](/reference/catalog-reference#custom-catalog)） |
 | `/offline-mode` | 通过内置推理引擎运行本地模型 |
 | `/term [name [args...]]` | 不带名称时，打开终端会话选择器；带名称时，附加或分离该 tmux 会话，当会话为新建时拉起同名命令及参数 —— 参见[终端会话](/usage/tui#terminal-sessions) |
 | `/update [skip \| cancel]` | 安排在退出时安装待更新的版本；`skip` 永久忽略该版本，`cancel` 取消已安排的更新 |

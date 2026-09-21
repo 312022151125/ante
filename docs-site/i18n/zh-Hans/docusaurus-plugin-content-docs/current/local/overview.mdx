@@ -24,7 +24,7 @@ Ante 是一个独立的单二进制程序（压缩下载仅 ~15MB），能够自
 
 ## Ante 对本地模型的支持体系 {#how-ante-treats-local-models}
 
-**平等视作标准提供商。** 任何提供兼容 OpenAI 接口的本地服务端（Ollama、vLLM、LM Studio、自建服务等），均通过与托管提供商相同的 `catalog.json` 机制接入。无需特殊定制逻辑，后续也无需迁移。参见[添加本地提供商](/usage/providers#add-a-local-provider-with-no-auth)及[目录参考手册](/reference/catalog-reference)。
+**平等视作标准提供商。** 任何提供兼容 OpenAI 接口的本地服务端（Ollama、vLLM、LM Studio、自建服务等），均通过与托管提供商相同的 `catalog.json` 机制接入。无需特殊定制逻辑，后续也无需迁移。参见[添加本地提供商](/reference/catalog-reference#add-a-local-provider-with-no-auth)及[目录参考手册](/reference/catalog-reference)。
 
 **原生深度集成。** Ante 不仅支持配置一个基础 URL。[离线模式](/local/offline)能自动管理 llama.cpp 运行时：匹配硬件架构的固定校验构建版本（Apple Silicon Metal；Linux CUDA、Vulkan 或 CPU）、全盘 GGUF 文件自动发现、加载前内存显存智能预估、实时加载进度展示，以及在 TUI 中直接控制服务端生命周期。[推荐验证模型列表](/local/verified-models)让您在下载 17 GB 权重前明确其运行表现。若希望使用自定义构建或启动参数，请参见[自定义引擎](/local/custom-engines)。
 

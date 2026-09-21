@@ -24,7 +24,7 @@ Local is a first-class way to run Ante. Hosted and local providers live in the s
 
 ## How Ante treats local models
 
-**A provider like any other.** Any local server with an OpenAI-compatible endpoint (Ollama, vLLM, LM Studio, your own) registers through the same `catalog.json` mechanism as a hosted provider. No special casing, and nothing to migrate away from later. See [Providers](/usage/providers#add-a-local-provider-with-no-auth) and the [Catalog Reference](/reference/catalog-reference).
+**A provider like any other.** Any local server with an OpenAI-compatible endpoint (Ollama, vLLM, LM Studio, your own) registers through the same `catalog.json` mechanism as a hosted provider. No special casing, and nothing to migrate away from later. See [local provider setup](/reference/catalog-reference#add-a-local-provider-with-no-auth) and the [Catalog Reference](/reference/catalog-reference).
 
 **Native integration.** Ante goes further than tolerating a base URL. [Offline mode](/local/offline) manages llama.cpp itself: pinned, checksum-verified builds matched to your hardware (Metal on Apple silicon, CUDA or Vulkan or CPU on Linux), GGUF discovery across your disk, memory estimation before a model loads, live load progress, and server lifecycle handled in the TUI. A [curated model list](/local/verified-models) tells you what runs well before you download 17 GB. Prefer your own build or launch flags? [Custom engines](/local/custom-engines) covers that.
 

@@ -116,6 +116,7 @@ const sidebars: SidebarsConfig = {
       collapsed: true,
       items: [
         'reference/cli-reference',
+        'reference/tui-reference',
         'reference/tools-reference',
         'reference/protocol-reference',
         'reference/catalog-reference',

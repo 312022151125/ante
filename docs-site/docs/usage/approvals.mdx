@@ -12,7 +12,7 @@ Ante never runs destructive commands without your explicit approval. When the ag
 
 Each tool call shows what the agent wants to do. Use the arrow keys to pick your response and press Enter, or hit the matching number directly:
 
-<img src="/assets/cookbook/approval.gif" alt="Reviewing and approving a tool call" style={{width: '100%', borderRadius: '8px', margin: '16px 0'}} />
+<img src="/assets/cookbook/approval.gif" alt="Reviewing and approving a tool call" className="cookbook-demo" />
 
 | Key | Action |
 |-----|--------|
@@ -37,7 +37,7 @@ Press `Shift+Tab` to cycle the permission mode at any time: `strict` → `auto` 
 - **Auto** honors your permission rules, then allows unmatched tool calls automatically. Bash commands that Ante classifies as dangerous still ask for approval.
 - **Yolo** skips approval prompts and permission rules for the current session. You can also start directly in this mode with `ante --yolo`.
 
-<img src="/assets/cookbook/automode.gif" alt="Switching Ante permission modes and running in Auto mode" style={{width: '100%', borderRadius: '8px', margin: '16px 0'}} />
+<img src="/assets/cookbook/automode.gif" alt="Switching Ante permission modes and running in Auto mode" className="cookbook-demo" />
 
 See [Permissions](/configuration/permission) for mode defaults and rule configuration.
 

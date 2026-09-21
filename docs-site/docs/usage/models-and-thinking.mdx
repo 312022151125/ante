@@ -8,7 +8,7 @@ description: "Switch models, toggle providers, and adjust effort on the fly"
 
 Ante lets you switch between models, providers, and effort levels mid-session — no restart needed. Two dialogs split the job: `/models` refines the model and effort within your current provider, and `/providers` switches providers.
 
-<img src="/assets/cookbook/providers.gif" alt="Switching provider, model, and effort with /providers" style={{width: '100%', borderRadius: '8px', margin: '16px 0'}} />
+<img src="/assets/cookbook/providers.gif" alt="Switching provider, model, and effort with /providers" className="cookbook-demo" />
 
 ## Selecting a model
 
@@ -20,7 +20,7 @@ Press `Tab` to hand off to the provider selector when you want to switch provide
 
 ## Switching providers
 
-Type `/providers` to list every provider with its connection state. Press Enter on a connected provider to drill into its model picker — the same model list and effort slider, preselecting the model you last used on that provider. The switch commits only when you confirm with Enter; `Esc` steps back to the provider list. Enter on an unconnected provider starts its sign-in flow instead (see [Providers](/usage/providers#authentication)).
+Type `/providers` to list every provider with its connection state. Press Enter on a connected provider to drill into its model picker — the same model list and effort slider, preselecting the model you last used on that provider. The switch commits only when you confirm with Enter; `Esc` steps back to the provider list. Enter on an unconnected provider starts its sign-in flow instead (see [Connect a provider](/usage/providers#authentication)).
 
 Ante remembers the last model you used on each provider, so hopping between providers puts you back where you left off.
 

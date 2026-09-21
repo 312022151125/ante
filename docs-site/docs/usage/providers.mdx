@@ -1,206 +1,65 @@
 ---
-title: Providers
-description: "Pick your provider, sign in, and customize the catalog"
+title: Connect a provider
+description: "Sign in from the TUI or CLI, or use a provider API key"
 ---
 
-Ante is provider-agnostic. Each provider implements a common interface for sending prompts and receiving streaming responses, and providers and models are resolved from a catalog at session start.
+Connect Ante to a provider, choose a model, and start a conversation. Use browser sign-in with a supported account or supply your own API key.
 
-This page covers the everyday tasks: picking a provider, authenticating, and customizing the catalog. For the complete list of built-in providers, every model they serve, and the full `catalog.json` schema, see the [Catalog Reference](/reference/catalog-reference).
+## Sign in from the TUI {#authentication}
 
-## Selecting a provider
+1. Run `ante` in your project directory.
+2. Type `/connect` and choose **Antix**, **Anthropic Subscription**, or **OpenAI Subscription**.
+3. Follow the browser sign-in flow, then return to Ante.
+4. Open `/providers`, choose the connected provider, and confirm a model.
 
-You can set your provider three ways, in order of precedence:
+<img src="/assets/cookbook/connect.gif" alt="Connecting to a provider via /connect" className="cookbook-demo" />
 
-1. **CLI flag** — `ante --provider anthropic --model claude-sonnet-5`
-2. **Settings file** — set `provider` and `model` in `~/.ante/settings.json`
-3. **Auto-detect** — if you specify neither, Ante uses the first provider you have credentials for (and `local` if none).
+Ante saves your credentials for future sessions. Use `/connect` again when you need to sign in.
 
-Every provider key you can pass to `--provider` is listed in the [Catalog Reference](/reference/catalog-reference#built-in-providers).
+## Sign in from the CLI
 
-Mid-session, type `/providers` in the TUI: pick a connected provider, then confirm a model (and effort) from its scoped picker. Ante remembers the last model you used on each provider. See [Models, Providers & Effort](/usage/models-and-thinking#switching-providers).
-
-## Authentication
-
-Most providers read an API key from an environment variable:
+For Antix, you can complete OAuth sign-in before opening the TUI or running a headless task:
 
 ```bash
-export ANTHROPIC_API_KEY="sk-ant-..."
-ante --provider anthropic --model claude-sonnet-5
+ante auth login antix
+ante --provider antix
 ```
 
-Each provider's exact auth method (env var name or OAuth) is in the [Catalog Reference](/reference/catalog-reference#built-in-providers).
+The first command opens your browser. Finish signing in, then return to the terminal to run the second command.
 
-### Paste an API key
+CLI login currently supports Antix. For Anthropic and OpenAI subscriptions, use `/connect` in the TUI. See [`ante auth`](/reference/cli-reference#ante-auth) for `--no-browser` and `--force` options.
 
-You can also paste a key directly in the onboarding dialog (reopen it any time with `/welcome`): choose **Use API key**, and Ante auto-detects the provider from the key prefix, masks the input, and validates the key against the provider before storing it owner-only under `~/.ante/auth/`. A key set in the environment always takes precedence over a stored one.
+## Use an API key
 
-With Anthropic selected on the API-key step, press `Tab` to sign in to the Anthropic Console in your browser instead — Ante provisions an API key for you automatically, without the key ever touching the clipboard.
-
-### Subscription login (OAuth)
-
-Providers with subscription plans (Anthropic, OpenAI, Antix, etc.) can sign in via OAuth instead, so you use your existing subscription without managing API keys. Type `/connect` in the TUI to open the provider login flow. Ante launches your default browser for authentication, then links your session automatically.
-
-<img src="/assets/cookbook/connect.gif" alt="Connecting to a provider via /connect" style={{width: '100%', borderRadius: '8px', margin: '16px 0'}} />
-
-Once connected, Ante remembers your credentials for future sessions, so there is no need to re-authenticate each time.
-
-:::tip
-When using third-party providers, make sure the model supports tool use (function calling) — Ante relies on it for agent capabilities. If results are poor, try a larger or more capable model.
-:::
-
-## Custom catalog
-
-Create `~/.ante/catalog.json` to add a provider Ante doesn't ship, patch a built-in one, or tweak a model's defaults. It is merged on top of the built-in presets at startup, so you only specify what you want to add or change. Prefer not to write it by hand? Run `/add-provider` in the TUI: Ante discovers the endpoint's models, can probe which effort levels each one accepts, and writes the entry for you (restart to load it). The examples below are the common cases; see the [Catalog Reference](/reference/catalog-reference#catalogjson-schema) for the full schema, authentication forms, and resolution rules.
-
-### Add a hosted provider
-
-Most hosted endpoints are OpenAI-compatible. Register one with `wire_style: "OpenAiCompatible"`, point `base_url` at it, and list the models you want to appear in the picker:
-
-```json
-{
-  "providers": {
-    "together": {
-      "display_name": "Together AI",
-      "base_url": "https://api.together.xyz/v1",
-      "wire_style": "OpenAiCompatible",
-      "auth": { "bearer": { "env_key": "TOGETHER_API_KEY" } },
-      "preferred_models": [
-        {
-          "id": "moonshotai/Kimi-K2-Instruct",
-          "description": "Kimi K2 on Together",
-          "max_tokens": 16384,
-          "context_limit": 128000,
-          "effort": "medium"
-        }
-      ]
-    }
-  }
-}
-```
+Export your provider's API key in the shell where you run Ante, then select that provider:
 
 ```bash
-export TOGETHER_API_KEY="..."
-ante --provider together --model moonshotai/Kimi-K2-Instruct
+export ANTHROPIC_API_KEY="your-api-key"
+ante --provider anthropic
 ```
 
-### Declare the effort levels a model accepts
+The same flow works with any provider configured to read an environment variable. For example, use `OPENAI_API_KEY` with `--provider openai` or `ANTIX_API_KEY` with `--provider antix-api-key`. Find the exact provider names and variables in the [Catalog Reference](/reference/catalog-reference#built-in-providers).
 
-The [effort slider](/usage/models-and-thinking#effort)'s ladder is built in per provider and model family, so a model on a custom endpoint may get a ladder that doesn't match what the endpoint really accepts. Declare the true set with `supported_efforts` — the slider then shows exactly those levels, and OpenAI-compatible providers send the selected level as the same-named `reasoning_effort`:
+### Paste a key in the TUI {#paste-an-api-key}
 
-```json
-"preferred_models": [
-  {
-    "id": "kimi-k3",
-    "effort": "high",
-    "supported_efforts": ["low", "medium", "high"]
-  }
-]
-```
+Run `/welcome` and choose **Use API key**. Ante detects the provider from the key prefix, masks and validates the key, then stores it under `~/.ante/auth/` with access limited to your user. An environment key takes precedence over a saved key.
 
-An empty list (`"supported_efforts": []`) declares that the model takes no effort setting at all. There is no API that reports supported levels, so when in doubt let `/add-provider` probe the endpoint for you.
+With Anthropic selected on the API-key step, press `Tab` to sign in to the Anthropic Console in your browser and provision a key automatically.
 
-### Add a local provider with no auth
+## Choose a model and start working {#selecting-a-provider}
 
-Omit `auth` for a provider that needs no key, and leave `preferred_models` off when the provider has no stable picker/default model list — handy for a local server like Ollama where the available models change as you pull them. You can still pass any model id explicitly with `--provider` and `--model`:
+Type `/providers` to choose a connected provider, then confirm a model and effort level. Ante remembers the last model used on each provider. Use `/models` to change models on the current provider during a conversation.
 
-```json
-{
-  "providers": {
-    "ollama": {
-      "display_name": "Ollama",
-      "base_url": "http://localhost:11434/v1",
-      "wire_style": "OpenAiCompatible"
-    }
-  }
-}
-```
+To select a provider and model when launching Ante:
 
 ```bash
-ante --provider ollama --model qwen2.5-coder:7b
+ante --provider antix --model claude-sonnet-5
 ```
 
-### Patch a built-in provider
+You're ready to [work through a task in the TUI](/usage/tui). See [Models & Effort](/usage/models-and-thinking) for more on choosing and switching models.
 
-When the key matches a built-in provider, only the fields you set are changed.
-Set optional fields such as `auth` or `http_headers` to `null` to clear the
-preset value:
+## Custom endpoints and local models
 
-```json
-{
-  "providers": {
-    "openai": {
-      "base_url": "http://localhost:8080/v1",
-      "auth": null
-    }
-  }
-}
-```
+For a hosted endpoint or local server that isn't built in, run `/add-provider` in the TUI or follow the [custom catalog recipes](/reference/catalog-reference#custom-catalog). The [Catalog Reference](/reference/catalog-reference) holds provider lists, model metadata, and configuration examples.
 
-### Send extra request parameters
-
-Gateways and proxies often require a parameter Ante doesn't model. Put it in `extra_body` and it is merged into every chat and streaming request body for that provider:
-
-```json
-{
-  "providers": {
-    "my-gateway": {
-      "display_name": "My Gateway",
-      "base_url": "https://gateway.example.com/v1",
-      "wire_style": "OpenAiCompatible",
-      "auth": { "bearer": { "env_key": "MY_GATEWAY_API_KEY" } },
-      "extra_body": {
-        "service_tier": "priority"
-      }
-    }
-  }
-}
-```
-
-`extra_body` can only add fields — keys Ante already generates for that wire style (`model`, `messages`, `stream`, and friends) are dropped at startup with a notice, and the provider still loads. See [Extra request fields](/reference/catalog-reference#extra-request-fields) for the full reserved list.
-
-### Override model defaults
-
-The `models` section patches a model by id without redefining it. Each field you set replaces the built-in default; everything else is left alone:
-
-```json
-{
-  "models": {
-    "claude-opus-5": { "effort": "max" },
-    "claude-sonnet-5": { "effort": "high", "max_tokens": 64000 },
-    "gpt-5.5": { "temperature": 0.2 }
-  }
-}
-```
-
-## Third-party providers
-
-### Using Open Router
-
-1. Sign up at [openrouter.ai](https://openrouter.ai/) and generate an API key.
-2. Set your API key:
-   ```bash
-   export OPENROUTER_API_KEY="sk-or-..."
-   ```
-3. Use any model from [Open Router's model list](https://openrouter.ai/models):
-   ```bash
-   ante --provider openrouter --model deepseek/deepseek-reasoner
-   ```
-
-### OpenAI-compatible providers
-
-Many LLM providers expose an OpenAI-compatible API (e.g., Together AI, Fireworks, Groq Cloud, Perplexity). For a one-off you can reuse the built-in `openai-compatible` provider via env vars (no catalog edit needed):
-
-1. Set the base URL — the per-provider variable takes precedence over `MODEL_BASE_URL`:
-   ```bash
-   export OPENAI_COMPATIBLE_BASE_URL="https://api.together.xyz/v1"
-   ```
-2. Set your API key:
-   ```bash
-   export OPENAI_COMPATIBLE_API_KEY="your-provider-api-key"
-   ```
-3. Run with the OpenAI Compatible provider:
-   ```bash
-   ante --provider openai-compatible --model meta-llama/Llama-3-70b-chat-hf
-   ```
-
-For something you'll use repeatedly, add a named provider to your [custom catalog](#custom-catalog) instead so it shows up in the picker.
+To run a model on your own hardware without credentials, follow [Offline Mode](/local/offline).

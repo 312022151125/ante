@@ -14,14 +14,14 @@ const docsFooterItems = isZhHansBuild
       { label: '快速入门', to: '/start/quickstart' },
       { label: '基准评测', to: '/benchmarks/eval' },
       { label: '本地模型', to: '/local/overview' },
-      { label: '模型提供商', to: '/usage/providers' },
+      { label: '连接提供商', to: '/usage/providers' },
     ]
   : [
       { label: 'Overview', to: '/' },
       { label: 'Quickstart', to: '/start/quickstart' },
       { label: 'Benchmarks', to: '/benchmarks/eval' },
       { label: 'Local Models', to: '/local/overview' },
-      { label: 'Providers', to: '/usage/providers' },
+      { label: 'Connect a provider', to: '/usage/providers' },
     ]
 
 const footerCommunityItems = [

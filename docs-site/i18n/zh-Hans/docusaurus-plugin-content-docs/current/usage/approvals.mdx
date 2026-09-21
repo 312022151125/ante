@@ -12,7 +12,7 @@ Ante 绝不会在未经您明确授权的情况下执行潜在危险的操作。
 
 每次工具调用都会清晰展示智能体希望执行的操作。使用方向键选择响应并按 Enter 确认，或直接按下对应编号：
 
-<img src="/assets/cookbook/approval.gif" alt="审查与批准工具调用" style={{width: '100%', borderRadius: '8px', margin: '16px 0'}} />
+<img src="/assets/cookbook/approval.gif" alt="审查与批准工具调用" className="cookbook-demo" />
 
 | 按键 | 功能 |
 |-----|--------|
@@ -37,7 +37,7 @@ Ante 绝不会在未经您明确授权的情况下执行潜在危险的操作。
 - **Auto** 优先遵循配置的权限规则，未命中规则的工具调用会自动允许；但被 Ante 判定为危险的 Bash 命令依然会弹出人工审批。
 - **Yolo** 完全跳过当前会话的所有审批提示与权限规则检查。也可以通过命令行 `ante --yolo` 直接以此模式启动。
 
-<img src="/assets/cookbook/automode.gif" alt="在 Ante 中切换权限模式并使用 Auto 模式" style={{width: '100%', borderRadius: '8px', margin: '16px 0'}} />
+<img src="/assets/cookbook/automode.gif" alt="在 Ante 中切换权限模式并使用 Auto 模式" className="cookbook-demo" />
 
 关于权限模式默认值及规则配置，请参见[权限控制](/configuration/permission)。
 
