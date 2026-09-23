@@ -660,7 +660,7 @@ impl ToolUse {
     }
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ModelSpec {
     #[serde(alias = "name")]
     pub id: String,

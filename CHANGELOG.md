@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.2.4 - 2026-09-22
+
+### Added
+- GPT-6 Sol and Luna (OpenAI and OpenRouter), Claude Opus 5.5 (Anthropic, subscription presets, and OpenRouter), Grok 4.7, and MiMo 2.6 Pro/Flash in the built-in model catalogs
+- `ante update` prints a message when no newer version is available
+
+### Changed
+- Offline engine updated to llama.cpp b11046; the removed `--mlock`, `--mmap`/`--no-mmap`, and DirectIO loading flags are rejected with guidance
+- Restored the muted spinner and amber tool indicators in the TUI
+- TUI modal state refactor: every modal is held as a value in the modal state
+
+### Fixed
+- Shared high-detail images are capped at 2000px
+
+### Crates
+- Public crates published as 0.2.4: ante-protocol-shape, ante-llm, ante-exec, ante-sdk
+
 ## v0.2.3 - 2026-09-21
 
 ### Added
