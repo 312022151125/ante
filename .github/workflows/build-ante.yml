@@ -1,3 +1,4 @@
+```yaml
 name: Build Ante
 
 on:
@@ -16,22 +17,33 @@ permissions:
 
 jobs:
   build:
-    name: Build ${{ matrix.target }}
+    name: Build ${{ matrix.app }} - ${{ matrix.target }}
+
     strategy:
       fail-fast: false
       matrix:
         include:
+          # Linux x64
           - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
-            artifact: ante-linux-x64
+            app: ante-acp
+            artifact: ante-acp-linux-x64
+
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            app: ante-gateway
+            artifact: ante-gateway-linux-x64
+
+          # macOS Intel x64
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+            app: ante-acp
+            artifact: ante-acp-darwin-x64
 
           - os: macos-15-intel
             target: x86_64-apple-darwin
-            artifact: ante-darwin-x64
-
-          - os: macos-15
-            target: aarch64-apple-darwin
-            artifact: ante-darwin-arm64
+            app: ante-gateway
+            artifact: ante-gateway-darwin-x64
 
     runs-on: ${{ matrix.os }}
 
@@ -42,22 +54,32 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: "1.88"
           targets: ${{ matrix.target }}
 
       - name: Cache Rust
         uses: Swatinem/rust-cache@v2
         with:
-          shared-key: ${{ matrix.target }}
+          workspaces: ${{ matrix.app }}
+          shared-key: ${{ matrix.app }}-${{ matrix.target }}
 
       - name: Build
-        run: cargo build --release --locked --target ${{ matrix.target }}
+        shell: bash
+        run: |
+          cargo build \
+            --release \
+            --locked \
+            --manifest-path "${{ matrix.app }}/Cargo.toml" \
+            --target "${{ matrix.target }}"
 
       - name: Prepare artifact
         shell: bash
         run: |
           mkdir -p dist
-          cp "target/${{ matrix.target }}/release/ante" \
+
+          cp "${{ matrix.app }}/target/${{ matrix.target }}/release/${{ matrix.app }}" \
              "dist/${{ matrix.artifact }}"
+
           chmod +x "dist/${{ matrix.artifact }}"
 
       - name: Upload artifact
@@ -67,3 +89,4 @@ jobs:
           path: dist/${{ matrix.artifact }}
           if-no-files-found: error
           retention-days: 14
+```
